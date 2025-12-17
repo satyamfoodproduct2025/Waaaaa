@@ -1,0 +1,2940 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Library Work Automate - Dashboard</title>
+    <style>
+        /* CSS: Base Theme, Animations, and Variables */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
+
+        :root {
+            --bg-color: #0b0c10;
+            --gradient-start: #663399; /* Violet */
+            --gradient-end: #00bcd4; /* Cyan */
+            --glow-color: #ff2a6d; /* Deep Pink */
+            --text-color: #ffffff;
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --secondary-bg: rgba(17, 18, 23, 0.9); /* Darker panel background */
+            --attendance-summary-bg: #1e1e2d; /* Darker background for summary panel */
+            --detail-panel-bg: rgba(17, 18, 23, 0.95);
+            
+            /* NEW: Login Panel Colors */
+            --login-bg: #1a1a2e; /* Darker space look */
+            --login-border: #4CAF50; /* Green highlight */
+            --login-glow: #00bcd4; /* Cyan glow */
+            
+            /* NEW: Modal Styles */
+            --modal-bg: #1e1e2d;
+            --modal-border: var(--glow-color);
+            --modal-button-height: 45px; /* Consistent button height for modals */
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0; padding: 0; min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            background: var(--bg-color); overflow-x: hidden; position: relative;
+            touch-action: manipulation;
+        }
+        
+        body::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 300%; height: 300%;
+            background: linear-gradient(45deg, var(--gradient-start) 0%, #3366ff 25%, var(--gradient-end) 50%, var(--glow-color) 75%, var(--gradient-start) 100%);
+            background-size: 200% 200%; opacity: 0.15; animation: gradientMove 30s infinite linear;
+        }
+        @keyframes gradientMove { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+        @keyframes subtleTilt { 0%, 100% { transform: perspective(1000px) rotateY(0deg) scale(1); } 50% { transform: perspective(1000px) rotateY(1deg) scale(1.01); } }
+        
+        .login-container, .main-panel {
+            position: relative; z-index: 10; padding: 40px 30px; border-radius: 20px;
+            background: var(--secondary-bg); box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--gradient-end); color: var(--text-color);
+            width: 95%; max-width: 800px;
+            box-sizing: border-box; 
+        }
+        
+        .login-container { 
+            max-width: 420px; 
+            animation: subtleTilt 10s infinite ease-in-out; 
+            background: var(--login-bg);
+            border: 3px solid var(--login-border);
+            box-shadow: 0 0 50px rgba(76, 175, 80, 0.5), 0 0 20px var(--login-glow);
+        }
+        .header-text h1 {
+            background: linear-gradient(45deg, var(--login-border), var(--login-glow)) !important; 
+            -webkit-background-clip: text !important; 
+            -webkit-text-fill-color: transparent !important; 
+            text-shadow: 0 0 10px rgba(0, 188, 212, 0.5) !important;
+        }
+        .input-group input:focus { 
+            outline: none; 
+            border-color: var(--login-glow) !important; 
+            box-shadow: 0 0 10px var(--login-glow) !important; 
+        }
+        .login-btn-final {
+            background: linear-gradient(45deg, var(--login-border), var(--login-glow)) !important;
+            box-shadow: 0 5px 20px rgba(0, 188, 212, 0.4) !important;
+        }
+        .tab-button.active { 
+            background: linear-gradient(45deg, var(--login-border), var(--login-glow)) !important;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4) !important;
+        }
+
+        #dashboardPanel, #studentViewPanel, #seatGraphPanel, #wowViewPanel, #payDetailsPanel, #attendanceViewPanel, #payActionPanel, #pDetailsPanel,
+        #settingsPanel, #studentDashboardPanel, #studentPaymentPanel {
+            display: none; 
+            padding: 0; 
+            box-shadow: none; border: none;
+        }
+        
+        .main-panel-content { padding: 0; }
+
+        .welcome-header { text-align: center; margin-bottom: 40px; }
+        .welcome-header h2 { margin: 0; font-size: 2.5rem; color: #dc3545; letter-spacing: 5px; font-weight: 900; }
+        .welcome-header h1 { margin: 0; height: 0; font-size: 0; opacity: 0; } 
+        .welcome-header p { color: #bbb; margin: 10px 0 0 0; font-size: 1rem; }
+        
+        /* --- NEW: Student Welcome Card Design --- */
+        .student-welcome-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-left: 4px solid var(--glow-color);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        .student-welcome-card::after {
+            content: ''; position: absolute; top: 0; right: 0; width: 100px; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03));
+            transform: skewX(-20deg); pointer-events: none;
+        }
+        .welcome-sub-text {
+            color: #aaa; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px;
+        }
+        .student-name-hero {
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #ffffff, #e0e0e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .seat-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(0, 188, 212, 0.15);
+            color: #00bcd4;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border: 1px solid rgba(0, 188, 212, 0.3);
+            box-shadow: 0 0 15px rgba(0, 188, 212, 0.1);
+        }
+        .seat-badge i { font-size: 1rem; }
+
+        /* Default Grid for PC (Auto fit) */
+        .button-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        
+        .dashboard-btn { 
+            padding: 30px 15px; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: 700;
+            text-align: center; cursor: pointer; transition: all 0.3s ease-in-out; color: var(--text-color);
+            background: linear-gradient(135deg, var(--gradient-start), #3366ff);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5); position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; /* Center content */
+        }
+        .dashboard-btn i { margin-bottom: 10px; font-size: 1.5rem; } /* Icon spacing */
+        
+        .dashboard-btn:hover { transform: translateY(-5px) scale(1.03); box-shadow: 0 10px 30px var(--glow-color); background: linear-gradient(135deg, var(--glow-color), var(--gradient-end)); }
+        
+        .logout-btn {
+            width: 100%; padding: 12px; margin-top: 30px; font-weight: 700; cursor: pointer; border-radius: 10px; transition: all 0.3s ease;
+            background: none; border: 2px solid var(--glow-color); color: var(--glow-color);
+        }
+        .logout-btn:hover { background: var(--glow-color); color: var(--bg-color); }
+        
+        .action-buttons-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; 
+            margin-top: 20px;
+        }
+        .action-buttons-footer .panel-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gradient-end);
+        }
+        .back-btn, .print-btn, #toggleFormBtn {
+            padding: 10px 20px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            width: auto; 
+            margin: 0;
+            font-size: 1rem;
+        }
+        .back-btn { background: none; border: 2px solid var(--gradient-end); color: var(--gradient-end); }
+        .back-btn:hover { background: var(--gradient-end); color: var(--bg-color); }
+        .print-btn { background: #1976D2; color: var(--text-color); border: none; }
+        .print-btn:hover { background: #1565C0; }
+        #toggleFormBtn:hover { opacity: 0.9; }
+
+        .student-header-controls { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0; padding-top: 10px; padding-bottom: 0; }
+        
+        #studentForm {
+            display: none; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px; margin-top: 20px; margin-bottom: 30px; padding: 20px; 
+            border: 1px solid var(--gradient-start); border-radius: 10px;
+        }
+        #studentForm input {
+            padding: 10px; border-radius: 8px; border: 1px solid var(--gradient-end);
+            background: var(--input-bg); color: var(--text-color); font-size: 1rem; box-sizing: border-box;
+        }
+        .submit-data-btn:hover { opacity: 0.9; }
+
+        .data-table-container { overflow-x: auto; max-height: 50vh; }
+        #studentTable, #wowTable, #payDetailsTable, #attendanceTable, #detailedAttendanceTable, #pDetailsTableFullYear {
+            width: 100%; border-collapse: collapse; min-width: 1000px; 
+        }
+        #studentTable th, #studentTable td, #wowTable th, #wowTable td, #payDetailsTable th, #payDetailsTable td, #attendanceTable th, #attendanceTable td, #detailedAttendanceTable th, #detailedAttendanceTable td, #pDetailsTableFullYear th, #pDetailsTableFullYear td {
+            padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #studentTable th, #wowTable th, #payDetailsTable th, #attendanceTable th, #detailedAttendanceTable th, #pDetailsTableFullYear th {
+            color: #000; font-weight: 700; position: sticky; top: 0; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); 
+            border-bottom: 3px solid; white-space: nowrap; background-color: #fff;
+        }
+        
+        #studentTable th:nth-child(1), #wowTable th:nth-child(1), #payDetailsTable th:nth-child(2), #attendanceTable th:nth-child(2), #pDetailsTableFullYear th:nth-child(2) { border-color: var(--gradient-start); } 
+        #studentTable th:nth-child(2), #wowTable th:nth-child(2), #payDetailsTable th:nth-child(3), #attendanceTable th:nth-child(3), #pDetailsTableFullYear th:nth-child(3) { border-color: var(--glow-color); } 
+        #studentTable th:nth-child(3), #wowTable th:nth-child(3), #payDetailsTable th:nth-child(4) { border-color: #17a2b8; } 
+        #studentTable th:nth-child(4), #wowTable th:nth-child(4), #payDetailsTable th:nth-child(5) { border-color: #ffc107; } 
+        #studentTable th:nth-child(5), #wowTable th:nth-child(5), #payDetailsTable th:nth-child(6) { border-color: var(--gradient-end); } 
+        #studentTable th:nth-child(6), #wowTable th:nth-child(6) { border-color: #3366ff; } 
+        #studentTable th:nth-child(7), #wowTable th:nth-child(7) { border-color: #4caf50; } 
+        #studentTable th:nth-child(8), #wowTable th:nth-child(8) { border-color: #f44336; } 
+        
+        #studentTable tbody td, #wowTable tbody td, #payDetailsTable tbody td, #attendanceTable tbody td, #detailedAttendanceTable tbody td, #pDetailsTableFullYear tbody td { 
+            color: #000; background-color: #FFFFFF; 
+        }
+        #studentTable tbody tr:nth-child(odd), #wowTable tbody tr:nth-child(odd), #payDetailsTable tbody tr:nth-child(odd), #attendanceTable tbody tr:nth-child(odd), #detailedAttendanceTable tbody tr:nth-child(odd), #pDetailsTableFullYear tbody tr:nth-child(odd) { 
+            background-color: #f0f0f0; 
+        }
+        /* Highlight row on student view for double-click */
+        #studentTable tbody tr { cursor: pointer; }
+        #studentTable tbody tr:hover { background-color: #e6f7ff; }
+
+        #wowTable th:nth-child(6) { border-color: #FF5722; } 
+        #wowTable th:nth-child(7) { border-color: #009688; } 
+        #wowTable th:nth-child(8) { border-color: #FFC107; } 
+        /* WOW Payment cell for double-click */
+        #wowTable tbody td:nth-child(8) { cursor: pointer; font-weight: bold; }
+        #wowTable tbody tr:hover td:nth-child(8) { background-color: #fff1c8; }
+
+        .wow-input-seat {
+            background: #f8f8f8; border: 1px solid #ccc; color: #000; padding: 5px; width: 90%;
+            border-radius: 5px; text-align: center; box-sizing: border-box; 
+        }
+        .wow-batch-input {
+            background: #f8f8f8; border: 1px solid #ccc; color: #000; text-align: center; width: 100%;
+            display: block; margin-bottom: 5px; padding: 5px; border-radius: 5px; height: auto; 
+            white-space: normal; box-sizing: border-box; 
+        }
+        
+        .controls {
+            margin-bottom: 20px; padding: 15px; background-color: var(--secondary-bg);
+            border: 1px solid var(--gradient-start); border-radius: 8px; display: none; 
+            align-items: center; gap: 15px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); color: var(--text-color);
+        }
+        .controls.show { display: flex; }
+        .controls label { font-weight: bold; color: var(--text-color); }
+        .controls input[type="number"] {
+            padding: 8px; border: 1px solid var(--gradient-end); border-radius: 4px; width: 80px;
+            text-align: center; font-size: 16px; background: var(--input-bg); color: var(--text-color); box-sizing: border-box; 
+        }
+        .controls button {
+            padding: 8px 15px; background-color: var(--gradient-start); color: white; border: none;
+            border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.2s;
+        }
+        .controls button:hover { background-color: #582a86; }
+
+        .booking-table {
+            width: 100%; border-collapse: collapse; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: var(--secondary-bg); color: var(--text-color);
+        }
+        .booking-table th, .booking-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1); padding: 0; text-align: center; height: 50px;
+        }
+        .booking-table th {
+            background-color: var(--gradient-end); color: var(--bg-color); font-weight: bold; padding: 12px 8px;
+            position: sticky; top: 0; z-index: 10;
+        }
+        .seat-number-cell {
+            padding: 12px 8px; background-color: rgba(255, 255, 255, 0.05); font-weight: bold; cursor: pointer;
+        }
+        .shift-box {
+            cursor: pointer; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; transition: background-color 0.2s, transform 0.1s; user-select: none;
+            padding: 8px; box-sizing: border-box; color: var(--bg-color); font-size: 0.8rem; line-height: 1;
+        }
+        .available { background-color: #d4edda; color: #155724; }
+        .available:hover { background-color: #c3e6cb; transform: scale(1.02); }
+        .booked { background-color: #f8d7da; color: #721c24; font-weight: 500; }
+
+        #payDetailsTable th:nth-child(1), #pDetailsTableFullYear th:nth-child(1) { border-color: #f44336; } 
+        #payDetailsTable .month-sub-header, #attendanceTable .date-sub-header, #detailedAttendanceTable .date-sub-header, #pDetailsTableFullYear .month-sub-header {
+            font-size: 0.9em; padding: 8px 5px; border-bottom: 1px solid #ccc;
+        }
+        #payDetailsTable .payment-cell, #pDetailsTableFullYear .payment-cell {
+            text-align: center; font-weight: bold; font-size: 1.2em; color: #4caf50;
+        }
+        #payDetailsTable .address-cell, #pDetailsTableFullYear .address-cell { line-height: 1.4; }
+        .admission-status { font-weight: bold; }
+        .admission-future { color: #28a745; } 
+        .admission-due { color: #fd7e14; } 
+        .admission-late { color: #dc3545; } 
+        
+        #detailedAttendancePanel {
+            display: none; padding: 0; background: var(--detail-panel-bg); max-width: 900px; margin: 0 auto;
+        }
+        #attendanceSummaryPanel {
+            text-align: center; padding: 15px 20px; margin-bottom: 20px; background: var(--attendance-summary-bg);
+            border: 2px solid var(--glow-color); border-radius: 10px;
+        }
+        .summary-header {
+            font-size: 1.5rem; font-weight: 900; color: var(--gradient-end); margin-bottom: 10px;
+        }
+        .summary-details {
+            display: flex; justify-content: space-around; align-items: center; padding: 10px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.2); 
+        }
+        .summary-count-box { font-size: 1.1rem; font-weight: 700; }
+        
+        #attendanceTable .attendance-absent, #detailedAttendanceTable .attendance-absent {
+            color: #dc3545; font-weight: 900; text-align: center; font-size: 1.2rem; padding: 5px; 
+        }
+        #attendanceTable { min-width: 1000px; }
+        
+        /* --- UPDATED: Calendar Grid Styling for Mobile Fix --- */
+        #calendarGridContainer {
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 5px; 
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 8px; 
+            background: white; 
+        }
+        .day-label {
+            text-align: center; font-weight: 700; color: var(--gradient-end); padding: 5px; font-size: 0.9rem;
+        }
+        .date-box {
+            aspect-ratio: 1 / 1.5; border-radius: 5px; display: flex; flex-direction: column; padding: 3px;
+            font-size: 0.8rem; text-align: center; overflow: hidden; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s; border: 1px solid #ddd;
+            min-width: 0; /* Important for grid overflow fix */
+        }
+        .date-box-header { font-weight: 900; color: #000; padding-bottom: 2px; font-size: 1.2em; }
+        .date-box-body { font-size: 0.7rem; line-height: 1.2; overflow: hidden; color: #000; }
+        .date-box.present { background-color: #d4edda; color: #155724; }
+        .date-box.absent { background-color: #f8d7da; color: #721c24; }
+        .date-box.future, .date-box.padding { background-color: #e0e0e0; color: #666; }
+        .date-box.padding .date-box-header, .date-box.future .date-box-header { color: #666; }
+        
+        #attendanceTable tbody td:nth-child(2) { cursor: pointer; transition: background-color 0.2s; }
+        #attendanceTable tbody td:nth-child(2):hover { background-color: #f0f0f0; }
+
+        #payActionPanel .action-button-grid {
+            display: flex; justify-content: center; gap: 30px; margin-top: 40px;
+        }
+        #payActionPanel .action-button-grid .dashboard-btn {
+            width: 250px; padding: 30px 15px; background: linear-gradient(135deg, #FF9800, #FFC107); font-size: 1.1rem; 
+        }
+        #payActionPanel .action-button-grid .dashboard-btn:hover {
+             box-shadow: 0 10px 30px var(--glow-color); background: linear-gradient(135deg, var(--glow-color), var(--gradient-end)); 
+        }
+        #payActionPanel .welcome-header h2 { color: #dc3545 !important; }
+        
+        #dueMonthsContainer {
+            padding: 20px; background: rgba(0,0,0,0.2); border-radius: 10px; max-height: 40vh;
+            overflow-y: auto; margin-bottom: 20px;
+        }
+        #dueMonthsContainer div { padding: 10px; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        #dueMonthsContainer div:last-child { border-bottom: none; }
+        #dueMonthsContainer label { margin-left: 15px; }
+        #proceedToPayBtn {
+            width: 100%; padding: 15px; font-size: 1.2rem; font-weight: 700; background: var(--gradient-start);
+            border: none; border-radius: 10px; cursor: pointer; margin-bottom: 20px;
+        }
+        
+        /* Modal Overlays (General Styling) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8); display: none; justify-content: center;
+            align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: var(--modal-bg); padding: 30px; border-radius: 15px;
+            max-width: 450px; width: 90%; box-shadow: 0 0 30px var(--modal-border);
+            border: 2px solid var(--modal-border); color: var(--text-color);
+        }
+        .modal-header {
+            font-size: 1.5rem; font-weight: 900; color: var(--gradient-end); margin-bottom: 20px;
+            text-align: center;
+        }
+        .modal-info p { margin: 10px 0; font-size: 1.1rem; }
+        .modal-options { margin-top: 20px; }
+        .modal-options label {
+            display: block; margin: 15px 0; cursor: pointer; font-size: 1rem; font-weight: 700;
+        }
+        .modal-options input[type="radio"], .modal-options input[type="checkbox"] {
+            margin-right: 10px; transform: scale(1.2);
+        }
+        .modal-input {
+            width: 100%; padding: 10px; margin-top: 10px; border-radius: 8px;
+            border: 1px solid var(--gradient-end); background: var(--input-bg);
+            color: var(--text-color); box-sizing: border-box;
+        }
+        #partialPaymentAmount, #adminPaymentPassword {
+             width: 90%; /* Smaller width for partial input */
+        }
+        
+        /* Modal Submit/Action Buttons Styling */
+        .modal-submit-btn, .modal-action-btn {
+            width: 100%; 
+            padding: 10px 12px; 
+            margin-top: 15px; 
+            font-weight: 700;
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer;
+            transition: opacity 0.3s, transform 0.2s;
+            height: var(--modal-button-height); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .modal-submit-btn {
+            background: linear-gradient(45deg, var(--login-border), var(--login-glow));
+            color: var(--bg-color);
+        }
+        .modal-submit-btn:hover, .modal-action-btn:hover { opacity: 0.9; transform: scale(1.01); }
+
+        /* Student Action Modal Specific */
+        #actionOptions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #actionOptions .dashboard-btn {
+            width: 100%;
+            padding: 10px 15px;
+            font-size: 1rem;
+            min-height: var(--modal-button-height);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 0;
+        }
+        #removeStudentBtn {
+             background: linear-gradient(135deg, #dc3545, #f44336) !important;
+             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+        #replaceNameBtn {
+             background: linear-gradient(135deg, #28a745, #4caf50) !important;
+             box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        #closeStudentActionModal {
+             width: 100%;
+             padding: 10px;
+             background: none; 
+             border: 2px solid var(--gradient-end); 
+             color: var(--gradient-end);
+        }
+
+
+        @media print {
+            body { 
+                background: white !important; display: block; min-height: auto; position: static; height: auto !important; overflow: visible !important; 
+                margin: 0; padding: 0; width: 100% !important; max-width: none !important; 
+            }
+            body::before { display: none !important; } 
+            .login-container, #dashboardPanel, #payActionPanel, #settingsPanel, #studentDashboardPanel, #studentPaymentPanel, .modal-overlay { 
+                display: none !important; 
+            }
+            .action-buttons-footer, .student-header-controls, .controls, #toggleFormBtn, .back-btn, .print-btn { display: none !important; }
+
+            .main-panel {
+                display: block !important; position: static; margin: 0 !important; 
+                padding: 0.5cm !important; box-shadow: none !important; border: none !important;
+                width: 100% !important; max-width: none !important; background: white !important; 
+                color: black !important;
+            }
+
+            #studentViewPanel h3, #seatGraphPanel h3, #wowViewPanel h3, #payDetailsPanel h3, #attendanceViewPanel h3, #payActionPanel h3, #pDetailsPanel h3 {
+                display: block !important; color: black !important; font-size: 1.1rem; 
+                margin: 0 0 8px 0 !important; padding: 0 !important; text-align: left;
+            }
+            
+            .data-table-container { overflow: visible !important; max-height: none !important; }
+            
+            #studentTable, #wowTable, .booking-table, #payDetailsTable, #attendanceTable, #pDetailsTableFullYear { 
+                width: 100%; border-collapse: collapse; font-size: 8.5pt; color: #000; min-width: 100%; table-layout: fixed; 
+            }
+            
+            #studentTable th, #wowTable th, #payDetailsTable th, #attendanceTable th, #pDetailsTableFullYear th {
+                color: white !important; font-weight: 700; border: 1px solid #000 !important; padding: 4px 2px; 
+                box-shadow: none !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+                -webkit-print-color-adjust: exact !important; color-adjust: exact !important; 
+            }
+            
+            #studentTable th:nth-child(1) { background-color: var(--gradient-start) !important; } 
+            #studentTable th:nth-child(2) { background-color: var(--glow-color) !important; } 
+            #studentTable th:nth-child(3) { background-color: #17a2b8 !important; } 
+            #studentTable th:nth-child(4) { background-color: #ffc107 !important; color: black !important; } 
+            #studentTable th:nth-child(5) { background-color: var(--gradient-end) !important; color: black !important; } 
+            #studentTable th:nth-child(6) { background-color: #3366ff !important; } 
+            #studentTable th:nth-child(7) { background-color: #4caf50 !important; } 
+            #studentTable th:nth-child(8) { background-color: #f44336 !important; } 
+
+            #wowTable th:nth-child(1) { background-color: var(--gradient-start) !important; } 
+            #wowTable th:nth-child(2) { background-color: var(--glow-color) !important; } 
+            #wowTable th:nth-child(3) { background-color: #17a2b8 !important; } 
+            #wowTable th:nth-child(4) { background-color: #ffc107 !important; color: black !important; } 
+            #wowTable th:nth-child(5) { background-color: var(--gradient-end) !important; color: black !important; } 
+            #wowTable th:nth-child(6) { background-color: #FF5722 !important; } 
+            #wowTable th:nth-child(7) { background-color: #009688 !important; } 
+            #wowTable th:nth-child(8) { background-color: #FFC107 !important; } 
+            
+            #payDetailsTable th:nth-child(1) { background-color: #f44336 !important; }
+            #payDetailsTable th:nth-child(2) { background-color: var(--gradient-start) !important; }
+            #payDetailsTable th:nth-child(3) { background-color: var(--glow-color) !important; }
+            #payDetailsTable th:nth-child(4) { background-color: #17a2b8 !important; }
+            #payDetailsTable th:nth-child(5) { background-color: #ffc107 !important; color: black !important; }
+            #payDetailsTable th:nth-child(6) { background-color: var(--gradient-end) !important; color: black !important; }
+            #payDetailsTable .month-sub-header, #pDetailsTableFullYear .month-sub-header { background-color: #e0e0e0 !important; color: black !important; }
+            .admission-status { color: black !important; }
+            
+            #pDetailsTableFullYear th:nth-child(1) { background-color: #f44336 !important; }
+            #pDetailsTableFullYear th:nth-child(2) { background-color: var(--gradient-start) !important; }
+            #pDetailsTableFullYear th:nth-child(3) { background-color: var(--glow-color) !important; }
+
+            #attendanceTable th:nth-child(1) { background-color: #dc3545 !important; }
+            #attendanceTable th:nth-child(2) { background-color: var(--gradient-start) !important; }
+            #attendanceTable th:nth-child(3) { background-color: var(--glow-color) !important; }
+            #attendanceTable .date-sub-header { background-color: #e0e0e0 !important; color: black !important; }
+
+            .booking-table th {
+                color: white !important; font-weight: 700; border: 1px solid #000 !important; padding: 4px 2px; 
+                box-shadow: none !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+                -webkit-print-color-adjust: exact !important; color-adjust: exact !important;
+                background-color: var(--gradient-end) !important; 
+            }
+            .booking-table th:nth-child(1) { background-color: var(--gradient-start) !important; }
+
+            #studentTable td, #wowTable td, .booking-table td, #payDetailsTable td, #attendanceTable td, #pDetailsTableFullYear td { 
+                background: white !important; color: black !important; border: 1px solid #000 !important; padding: 4px 2px; 
+                white-space: normal; -webkit-print-color-adjust: exact !important; color-adjust: exact !important;
+            }
+            #studentTable tbody tr:nth-child(odd), #wowTable tbody tr:nth-child(odd), .booking-table tbody tr:nth-child(odd), #payDetailsTable tbody tr:nth-child(odd), #attendanceTable tbody tr:nth-child(odd), #pDetailsTableFullYear tbody tr:nth-child(odd) { 
+                background-color: #f9f9f9 !important; -webkit-print-color-adjust: exact !important; color-adjust: exact !important;
+            }
+            
+            @page { size: A4; margin: 0; }
+        }
+
+        @keyframes colorShift { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+        .header-text { text-align: center; margin-bottom: 35px; font-weight: 900; text-shadow: 0 0 10px var(--glow-color); }
+        .header-text h2 { margin: 0; font-size: 1.6rem; color: var(--text-color); letter-spacing: 1px; opacity: 0.8; }
+        .header-text h1 { margin: 5px 0 0 0; font-size: 3rem; letter-spacing: 4px; background: linear-gradient(45deg, var(--glow-color), var(--gradient-end)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: colorShift 5s infinite alternate; }
+        .tab-buttons { display: flex; justify-content: space-between; margin-bottom: 30px; border-radius: 10px; padding: 5px; background: var(--input-bg); }
+        .tab-button { flex-grow: 1; padding: 12px; border: none; border-radius: 8px; background: transparent; color: rgba(255, 255, 255, 0.6); font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s ease; }
+        .tab-button.active { background: linear-gradient(45deg, var(--glow-color), var(--gradient-end)); color: var(--text-color); box-shadow: 0 4px 15px rgba(255, 42, 109, 0.4); }
+        .input-group { margin-bottom: 25px; position: relative; }
+        .input-group input { width: 100%; padding: 15px 10px 15px 45px; background: var(--input-bg); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; color: var(--text-color); font-size: 1rem; box-sizing: border-box; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+        .input-group input:focus { outline: none; border-color: var(--gradient-end); box-shadow: 0 0 10px var(--gradient-end); }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--glow-color); font-size: 1.1rem; }
+        .login-btn-final { width: 100%; padding: 15px; border: none; border-radius: 10px; background: linear-gradient(45deg, var(--gradient-start), var(--gradient-end)); color: var(--text-color); font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 20px rgba(0, 188, 212, 0.4); }
+        .login-btn-final:hover { opacity: 0.9; transform: scale(1.02); box-shadow: 0 5px 25px var(--glow-color); }
+        .error-message { color: var(--glow-color); text-align: center; margin-top: 20px; font-weight: 700; text-shadow: 0 0 5px var(--glow-color); }
+        
+        @media (max-width: 500px) { 
+            .login-container { padding: 30px 20px; } 
+            .header-text h1 { font-size: 2.5rem; } 
+            
+            .action-buttons-footer {
+                flex-wrap: wrap; 
+                gap: 10px;
+                justify-content: center;
+            }
+            .action-buttons-footer .panel-title { display: none; }
+            .back-btn, .print-btn, #toggleFormBtn {
+                flex-grow: 1; text-align: center; min-width: 120px; 
+            }
+            
+            /* --- FORCE 2 COLUMNS ON MOBILE (GRID VIEW) --- */
+            .button-grid { 
+                display: grid;
+                grid-template-columns: repeat(2, 1fr) !important; /* Force 2 columns */
+                gap: 15px;
+            }
+            .dashboard-btn {
+                padding: 15px 5px; /* Smaller padding */
+                font-size: 0.9rem; /* Smaller font */
+                min-height: 100px; /* Ensure consistent height */
+            }
+            .dashboard-btn i { font-size: 1.2rem; margin-bottom: 5px; }
+
+            #payActionPanel .action-button-grid {
+                flex-direction: column; gap: 20px; align-items: center;
+            }
+            #payActionPanel .action-button-grid .dashboard-btn { width: 90%; }
+            
+            /* --- FIX: Calendar Grid Mobile Adjustment --- */
+            #calendarGridContainer {
+                gap: 3px;
+                padding: 5px;
+            }
+            .date-box {
+                aspect-ratio: 1 / 1.1;
+                font-size: 0.7rem;
+            }
+            .date-box-header { font-size: 1em; }
+            .day-label { font-size: 0.75rem; padding: 2px; }
+            #attendanceTable, #detailedAttendanceTable { min-width: 100%; font-size: 0.8rem; }
+            .summary-details { flex-direction: column; gap: 10px; }
+            .summary-details > div { border-left: none !important; border-top: 1px solid rgba(255,255,255,0.2); width: 80%; padding-top: 5px; }
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalHeader">Payment for [Month Year]</div>
+            <div class="modal-info">
+                <p>Student: <strong id="modalStudentName"></strong></p>
+                <p>Required Payment: <strong id="modalRequiredAmount">₹0</strong></p>
+            </div>
+            <form id="paymentForm">
+                <input type="hidden" id="modalMobile">
+                <input type="hidden" id="modalYear">
+                <input type="hidden" id="modalMonth">
+                <div class="modal-options">
+                    
+                    <label>
+                        <input type="radio" name="paymentOption" value="full" checked id="fullPaymentRadio">
+                        Full Payment: <strong id="fullPaymentAmountDisplay">₹0</strong>
+                    </label>
+                    
+                    <label>
+                        <input type="radio" name="paymentOption" value="partial" id="partialPaymentRadio">
+                        Fill Payment:
+                        <input type="number" id="partialPaymentAmount" class="modal-input" placeholder="Enter Amount Paid" min="1" required disabled>
+                    </label>
+
+                    <input type="password" id="adminPaymentPassword" class="modal-input" placeholder="Admin Password" required style="margin-top: 20px;">
+                </div>
+                <button type="submit" class="modal-submit-btn">SUBMIT PAYMENT</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="paymentOverrideModal">
+        <div class="modal-content">
+            <div class="modal-header">Payment Override for <span id="overrideStudentName"></span></div>
+            <p style="text-align: center;">Current Shifts: <strong id="overrideCurrentShifts">0</strong> | Default Rate: ₹<strong id="overrideDefaultRate">300</strong></p>
+            <form id="paymentOverrideForm">
+                <input type="hidden" id="overrideMobile">
+                
+                <div style="padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px;">
+                    <h4 style="color: var(--gradient-end); margin-top: 0;">1. Per-Shift Rate Override</h4>
+                    <label style="font-weight: normal;">
+                        New Rate per Shift:
+                        <input type="number" id="newPerShiftRate" class="modal-input" placeholder="e.g., 250" min="0">
+                    </label>
+                    <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 0;">(Leave blank to use default or Fixed Total.)</p>
+                </div>
+
+                <div style="padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px;">
+                     <h4 style="color: var(--gradient-end); margin-top: 0;">2. Fixed Total Payment</h4>
+                    <label style="font-weight: normal;">
+                        Total Payment for Current Shifts (<span id="totalShiftCount"></span>):
+                        <input type="number" id="fixedTotalAmount" class="modal-input" placeholder="e.g., 500" min="0">
+                    </label>
+                    <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 0;">(Overrides Per-Shift rate. Leave blank for rate calculation.)</p>
+                </div>
+
+                <input type="password" id="adminOverridePassword" class="modal-input" placeholder="Admin Password" required style="margin-top: 20px;">
+                <button type="submit" class="modal-submit-btn">SAVE OVERRIDE</button>
+                <button type="button" id="clearOverrideBtn" class="modal-submit-btn" style="background: #dc3545; margin-top: 10px;">CLEAR ALL OVERRIDES</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="studentActionModal">
+        <div class="modal-content" id="studentActionContent" style="max-width: 500px;">
+            <div class="modal-header" id="studentActionHeader">Student Actions</div>
+            <p class="student-name-hero" id="studentActionName" style="text-align: center; margin-bottom: 30px; font-size: 1.5rem;"></p>
+            
+            <div id="actionOptions">
+                </div>
+            
+            <form id="replaceStudentForm" style="display: none; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);">
+                <input type="hidden" id="replaceMobileTarget">
+                <input type="hidden" id="replaceOriginalIndex">
+                <h4 style="color: var(--gradient-end); margin-top: 0;">Replace / Edit Student Data</h4>
+                 <input type="text" id="replaceFullName" class="modal-input" placeholder="Full Name" required>
+                 <input type="text" id="replaceFatherName" class="modal-input" placeholder="Father Name" required>
+                 <input type="text" id="replaceAddress" class="modal-input" placeholder="Address" required>
+                 <input type="tel" id="replaceMobileNumber" class="modal-input" placeholder="Mobile Number (10 digits)" required minlength="10" maxlength="10">
+                 <input type="date" id="replaceAdmissionDate" class="modal-input" required>
+                 <input type="password" id="replaceAdminPassword" class="modal-input" placeholder="Admin Password" required style="margin-top: 10px;">
+                <button type="submit" class="modal-submit-btn">SAVE CHANGES / REPLACE</button>
+            </form>
+            
+            <div class="action-buttons-footer" style="justify-content: center;">
+                <button class="modal-action-btn" id="closeStudentActionModal" type="button" style="width: 100%; background: none; border: 2px solid var(--gradient-end); color: var(--gradient-end);">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="login-container" id="loginPanel">
+        <div class="header-text">
+            <h2>Library Work</h2>
+            <h1>Automate</h1>
+        </div>
+        <div class="tab-buttons">
+            <button class="tab-button active" id="owner-tab">Owner Login</button>
+            <button class="tab-button" id="student-tab">Student Login</button>
+        </div>
+        <form id="loginForm">
+            <input type="hidden" id="loginType" value="owner">
+            <div class="input-group">
+                <i class="fas fa-mobile-alt"></i>
+                <input type="text" id="mobile" placeholder="Mobile Number" required> 
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="login-btn-final" id="loginSubmitBtn">OWNER LOGIN</button>
+            <p id="errorMsg" class="error-message" style="display: none;"></p>
+        </form>
+    </div>
+
+    <div class="main-panel" id="mainPanel" style="display: none;">
+
+        <div class="main-panel-content" id="dashboardPanel">
+            <div class="welcome-header">
+                <h2 id="welcomeText">Welcome</h2> 
+                <h1 id="welcomeUser"></h1> 
+                <p>Library Work Automate Dashboard</p> 
+            </div>
+
+            <div class="button-grid">
+                <button class="dashboard-btn" id="studentsDataBtn" style="background: linear-gradient(135deg, #007bff, #00bcd4);">
+                    <i class="fas fa-users"></i>
+                    Students Data
+                </button>
+                <button class="dashboard-btn" id="wowBtn" style="background: linear-gradient(135deg, var(--gradient-start), var(--glow-color));">
+                    <i class="fas fa-magic"></i>
+                    WOW
+                </button>
+                <button class="dashboard-btn" id="seatGraphBtn" style="background: linear-gradient(135deg, #ff9800, #ffc107);">
+                    <i class="fas fa-chart-bar"></i>
+                    Graph
+                </button>
+                <button class="dashboard-btn" id="payDetailsBtn" style="background: linear-gradient(135deg, #dc3545, var(--glow-color));">
+                    <i class="fas fa-wallet"></i>
+                    Pay Details
+                </button>
+                
+                <button class="dashboard-btn" id="qrLocationBtn" style="background: linear-gradient(135deg, #009688, #00bcd4);">
+                    <i class="fas fa-map-marked-alt"></i>
+                    QR & LOCATION
+                </button>
+                
+                <button class="dashboard-btn" id="attendanceBtn">
+                    <i class="fas fa-calendar-check"></i>
+                    Attendance Log
+                </button>
+                <button class="dashboard-btn" id="makePaymentBtn" style="background: linear-gradient(135deg, #4caf50, #28a745);">
+                    <i class="fas fa-wallet"></i>
+                    Make Payment
+                </button>
+            </div>
+
+            <button class="logout-btn" id="logoutBtn">LOGOUT</button>
+        </div>
+        
+        <div class="main-panel-content" id="studentDashboardPanel" style="display: none;">
+            
+            <div class="student-welcome-card">
+                <div class="welcome-sub-text">Welcome Back</div>
+                <div class="student-name-hero" id="studentWelcomeName">Student Name</div> 
+                <div class="seat-badge">
+                     <i class="fas fa-chair"></i>
+                     <span id="studentSeatInfo">Seat: N/A | Shift: N/A</span>
+                </div>
+            </div>
+
+            <div class="button-grid" style="grid-template-columns: 1fr; gap: 20px;">
+                <button class="dashboard-btn" id="studentAttendanceBtn" style="background: linear-gradient(135deg, #17a2b8, #00bcd4);">
+                    <i class="fas fa-camera"></i>
+                    Mark Attendance
+                </button>
+                <button class="dashboard-btn" id="studentPaymentBtn" style="background: linear-gradient(135deg, #4caf50, #28a745);">
+                    <i class="fas fa-wallet"></i>
+                    Online Payment
+                </button>
+                <button class="dashboard-btn" id="studentHistoryBtn" style="background: linear-gradient(135deg, #ff9800, #ffc107);">
+                    <i class="fas fa-history"></i>
+                    Attendance History
+                </button>
+            </div>
+
+            <button class="logout-btn" id="studentLogoutBtn">LOGOUT</button>
+        </div>
+        <div class="main-panel-content" id="studentPaymentPanel" style="display: none;">
+            <div class="welcome-header">
+                <h2 style="font-size: 2rem;">Your Due Payments</h2> 
+            </div>
+            
+            <div id="dueMonthsContainer">
+                </div>
+            
+            <button class="login-btn-final" id="proceedToPayBtn">Proceed to Pay (Total: ₹0)</button>
+
+            <div class="action-buttons-footer" style="justify-content: flex-start; margin-top: 10px;">
+                <button class="back-btn" id="backFromStudentPaymentBtn"><i class="fas fa-arrow-left"></i> Back</button>
+            </div>
+        </div>
+        <div class="main-panel-content" id="payActionPanel" style="display: none;">
+             <div class="welcome-header" style="margin-bottom: 20px;">
+                <h2 style="font-size: 2rem;">Payment Actions</h2> 
+                <p>Select the desired action</p> 
+            </div>
+            <div class="action-button-grid">
+                <button class="dashboard-btn" id="pDetailsBtn">
+                    <i class="fas fa-file-invoice"></i>
+                    P Details
+                </button>
+                <button class="dashboard-btn" id="pPrintBtn">
+                    <i class="fas fa-print"></i>
+                    P Print
+                </button>
+            </div>
+             <div class="action-buttons-footer" style="justify-content: flex-start;">
+                <button class="back-btn" id="backFromPayActionBtn"><i class="fas fa-arrow-left"></i> Back</button>
+            </div>
+        </div>
+
+        <div class="main-panel-content" id="pDetailsPanel" style="display: none;">
+            <h3 style="margin-top: 0; color: #f44336;">Detailed Payment Marking</h3>
+            <div class="data-table-container">
+                <table id="pDetailsTableFullYear">
+                    <thead>
+                        <tr id="pDetailsHeaderRowFullYear"></tr>
+                        <tr id="pDetailsSubHeaderRowFullYear"></tr>
+                    </thead>
+                    <tbody id="pDetailsTableBodyFullYear"></tbody>
+                </table>
+            </div>
+            <div class="action-buttons-footer">
+                <button class="back-btn" id="backFromPDetailsBtn"><i class="fas fa-arrow-left"></i> Back</button>
+                <div class="panel-title">Payment Marking</div>
+                <button class="print-btn" onclick="printPanel('pDetailsPanel')"><i class="fas fa-print"></i> Print</button>
+            </div>
+        </div>
+        <div class="main-panel-content" id="studentViewPanel" style="display: none;">
+            
+            <h3 style="margin-top: 0; color: var(--glow-color);" id="printHeading">Registered Students (Airtable Style)</h3>
+            
+            <div class="data-table-container">
+                <table id="studentTable">
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Full Name</th>
+                            <th>Father Name</th> 
+                            <th>Address</th>
+                            <th>Mobile No.</th>
+                            <th>Admission Date</th>
+                            <th>User Name</th>
+                            <th>Password</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="student-header-controls">
+            </div>
+            
+            <form id="studentForm">
+                <input type="text" id="fullName" placeholder="Full Name" required>
+                <input type="text" id="fatherName" placeholder="Father Name" required>
+                <input type="text" id="address" placeholder="Address" required>
+                <input type="tel" id="mobileNumber" placeholder="Mobile Number (10 digits)" required minlength="10" maxlength="10">
+                <input type="date" id="admissionDate" required>
+                <button type="submit" class="submit-data-btn">ADD NEW STUDENT</button>
+            </form>
+
+            <div class="action-buttons-footer">
+                <button class="back-btn" id="backToDashboardBtn"><i class="fas fa-arrow-left"></i> Back</button>
+                <button id="toggleFormBtn" type="button"><i class="fas fa-plus"></i> Add New</button>
+                <button class="print-btn" onclick="printPanel('studentViewPanel')"><i class="fas fa-print"></i> Print</button>
+            </div>
+        </div>
+
+        <div class="main-panel-content" id="wowViewPanel" style="display: none;">
+            
+            <h3 style="margin-top: 0; color: var(--glow-color);" id="wowPrintHeading">WOW Seat Allocation & Booking</h3>
+            
+            <div class="data-table-container">
+                <table id="wowTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 4%;">Seat No</th>
+                            <th style="width: 14%;">Full Name</th>
+                            <th style="width: 14%;">Father Name</th> 
+                            <th style="width: 14%;">Address</th>
+                            <th style="width: 12%;">Mobile No.</th>
+                            <th style="width: 12%;">Batch Time (Shifts)</th>
+                            <th style="width: 10%;">Shifts</th>
+                            <th style="width: 10%;">Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wowTableBody">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="action-buttons-footer">
+                <button class="back-btn" id="backFromWowBtn"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="print-btn" onclick="printPanel('wowViewPanel')"><i class="fas fa-print"></i> Print WOW</button>
+            </div>
+        </div>
+        
+        <div class="main-panel-content" id="seatGraphPanel" style="display: none;">
+            
+            <div style="padding: 10px 0;">
+                <h3 style="margin-top: 0; color: var(--gradient-start);" id="seatPrintHeading">लाइब्रेरी सीट बुकिंग डैशबोर्ड (Graph)</h3>
+            </div>
+
+            <div class="controls" id="adminControls">
+                <label for="seatCount">कुल सीटें सेट करें (1-500):</label>
+                <input type="number" id="seatCount" min="1" max="500" value="50">
+                <button id="setSeatsButton">लागू करें (Apply)</button>
+            </div>
+
+            <div class="data-table-container">
+                <table class="booking-table" id="bookingTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">सीट नं.</th>
+                            <th style="width: 22.5%;">शिफ्ट 1 (6:00 AM - 10:00 AM)</th>
+                            <th style="width: 22.5%;">शिफ्ट 2 (10:00 AM - 2:00 PM)</th>
+                            <th style="width: 22.5%;">शिफ्ट 3 (2:00 PM - 6:00 PM)</th>
+                            <th style="width: 22.5%;">शिफ्ट 4 (6:00 PM - 10:00 PM)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="action-buttons-footer">
+                <button class="back-btn" id="backFromSeatsBtn"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="print-btn" onclick="printPanel('seatGraphPanel')"><i class="fas fa-print"></i> Print Seats</button>
+            </div>
+        </div>
+        
+        <div class="main-panel-content" id="payDetailsPanel" style="display: none;">
+            <h3 style="margin-top: 0; color: #f44336;">Payment Due Details</h3>
+            <div class="data-table-container">
+                <table id="payDetailsTable">
+                    <thead>
+                        <tr id="payDetailsHeaderRow"></tr>
+                        <tr id="payDetailsSubHeaderRow"></tr>
+                    </thead>
+                    <tbody id="payDetailsTableBody"></tbody>
+                </table>
+            </div>
+            <div class="action-buttons-footer">
+                <button class="back-btn" id="backFromPayDetailsBtn"><i class="fas fa-arrow-left"></i> Back</button>
+                <div class="panel-title">Due Details</div>
+                <button class="print-btn" onclick="printPanel('payDetailsPanel')"><i class="fas fa-print"></i> Print</button>
+            </div>
+        </div>
+        
+        <div class="main-panel-content" id="settingsPanel" style="display: none;">
+            <div class="welcome-header" style="margin-bottom: 20px;">
+                <h2 style="font-size: 2rem;">QR/GPS Settings</h2> 
+                <p>Set Library QR Code and Geolocation</p> 
+            </div>
+            
+            <div class="button-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                <button class="dashboard-btn" id="generateQRBtn" style="background: linear-gradient(135deg, var(--gradient-start), #00bcd4);">
+                    <i class="fas fa-qrcode"></i>
+                    Generate/Print QR Code
+                </button>
+                <button class="dashboard-btn" id="setLocationBtn" style="background: linear-gradient(135deg, #009688, #4caf50);">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Set GPS Location
+                </button>
+            </div>
+            
+            <div class="action-buttons-footer" style="justify-content: flex-start; margin-top: 30px;">
+                <button class="back-btn" id="backFromSetupBtn"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+            </div>
+        </div>
+        <div class="main-panel-content" id="attendanceViewPanel" style="display: none;">
+            <h3 style="margin-top: 0; color: #17a2b8;">Student Attendance Details</h3>
+            
+            <div id="attendanceLogPanel">
+                <div class="data-table-container">
+                    <table id="attendanceTable">
+                        <thead>
+                            <tr id="attendanceHeaderRow"></tr>
+                            <tr id="attendanceSubHeaderRow"></tr>
+                        </thead>
+                        <tbody id="attendanceTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="action-buttons-footer">
+                    <button class="back-btn" id="backFromAttendanceLogBtn"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+                    <div class="panel-title">In Room</div>
+                    <button class="print-btn" onclick="printPanel('attendanceLogPanel')"><i class="fas fa-print"></i> Print Log</button>
+                </div>
+            </div>
+
+            <div id="detailedAttendancePanel" style="display: none;">
+                
+                <div id="attendanceSummaryPanel">
+                    <div class="summary-header" id="summaryStudentName"></div>
+                    <div class="summary-details">
+                        <div class="summary-count-box" style="color: var(--glow-color);">
+                            Absent Days: <span id="summaryAbsentCount">0</span>
+                        </div>
+                        <div style="border-left: 1px solid rgba(255, 255, 255, 0.5); height: 30px;"></div>
+                        <div class="summary-count-box" style="color: var(--gradient-start);">
+                            Present Days: <span id="summaryPresentCount">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-table-container" style="max-height: 70vh;">
+                     <h4 style="color: var(--gradient-end); text-align: center; margin-bottom: 10px;" id="calendarMonthTitle"></h4>
+                     <div id="calendarGridContainer">
+                        <div class="day-label">Sun</div>
+                        <div class="day-label">Mon</div>
+                        <div class="day-label">Tue</div>
+                        <div class="day-label">Wed</div>
+                        <div class="day-label">Thu</div>
+                        <div class="day-label">Fri</div>
+                        <div class="day-label">Sat</div>
+                        </div>
+                </div>
+
+                <div class="action-buttons-footer">
+                    <button class="back-btn" id="backToLogBtn"><i class="fas fa-arrow-left"></i> Back to Log</button>
+                    <div class="panel-title" id="detailedPanelTitle">Monthly Details</div>
+                    <button class="print-btn" onclick="printPanel('detailedAttendancePanel')"><i class="fas fa-print"></i> Print Details</button>
+                </div>
+
+            </div>
+        </div>
+        
+    </div>
+
+
+    <script>
+        // --- DOM Elements ---
+        const loginPanel = document.getElementById('loginPanel');
+        const mainPanel = document.getElementById('mainPanel'); 
+        const dashboardPanel = document.getElementById('dashboardPanel');
+        const studentViewPanel = document.getElementById('studentViewPanel'); 
+        const logoutBtn = document.getElementById('logoutBtn');
+        const loginForm = document.getElementById('loginForm');
+        const loginType = document.getElementById('loginType');
+        const mobileInput = document.getElementById('mobile');
+        const passwordInput = document.getElementById('password');
+        const errorMsg = document.getElementById('errorMsg');
+        const ownerTab = document.getElementById('owner-tab');
+        const studentTab = document.getElementById('student-tab');
+        
+        // Student Data Elements
+        const studentsDataBtn = document.getElementById('studentsDataBtn');
+        const backToDashboardBtn = document.getElementById('backToDashboardBtn');
+        const studentForm = document.getElementById('studentForm');
+        const studentTableBody = document.querySelector('#studentTable tbody');
+        const toggleFormBtn = document.getElementById('toggleFormBtn'); 
+
+        // Seat Data Elements
+        const wowBtn = document.getElementById('wowBtn'); 
+        const seatGraphBtn = document.getElementById('seatGraphBtn'); 
+        const backFromSeatsBtn = document.getElementById('backFromSeatsBtn');
+        const seatGraphPanel = document.getElementById('seatGraphPanel'); 
+        
+        // WOW Panel Elements
+        const wowViewPanel = document.getElementById('wowViewPanel');
+        const wowTableBody = document.getElementById('wowTableBody');
+        const backFromWowBtn = document.getElementById('backFromWowBtn');
+
+        // Seat Graph Panel specific elements
+        const tableBody = document.querySelector('#bookingTable tbody');
+        const seatCountInput = document.getElementById('seatCount');
+        const setSeatsButton = document.getElementById('setSeatsButton');
+        const adminControls = document.getElementById('adminControls');
+
+        // Pay Details Elements
+        const payDetailsBtn = document.getElementById('payDetailsBtn');
+        const payDetailsPanel = document.getElementById('payDetailsPanel');
+        const backFromPayDetailsBtn = document.getElementById('backFromPayDetailsBtn');
+        
+        // --- START: Payment Action Elements (UPDATED) ---
+        const makePaymentBtn = document.getElementById('makePaymentBtn');
+        const payActionPanel = document.getElementById('payActionPanel');
+        const backFromPayActionBtn = document.getElementById('backFromPayActionBtn');
+        const pDetailsBtn = document.getElementById('pDetailsBtn'); 
+        const pPrintBtn = document.getElementById('pPrintBtn');
+
+        // --- START: NEW P-DETAILS (PAYMENT MARKING) ELEMENTS ---
+        const pDetailsPanel = document.getElementById('pDetailsPanel');
+        const backFromPDetailsBtn = document.getElementById('backFromPDetailsBtn');
+        
+        // --- START: Attendance Panel Elements (UPDATED) ---
+        const attendanceBtn = document.getElementById('attendanceBtn');
+        const attendanceViewPanel = document.getElementById('attendanceViewPanel');
+        const attendanceLogPanel = document.getElementById('attendanceLogPanel');
+        const detailedAttendancePanel = document.getElementById('detailedAttendancePanel');
+        
+        const backFromAttendanceLogBtn = document.getElementById('backFromAttendanceLogBtn');
+        let backToLogBtn = document.getElementById('backToLogBtn'); 
+
+        // Summary Panel Elements
+        const attendanceSummaryPanel = document.getElementById('attendanceSummaryPanel');
+        const summaryStudentName = document.getElementById('summaryStudentName');
+        const summaryAbsentCount = document.getElementById('summaryAbsentCount');
+        const summaryPresentCount = document.getElementById('summaryPresentCount');
+
+        // Calendar Grid Elements (NEW)
+        const calendarGridContainer = document.getElementById('calendarGridContainer');
+        const calendarMonthTitle = document.getElementById('calendarMonthTitle');
+        
+        // --- START: NEW STUDENT DASHBOARD ELEMENTS ---
+        const studentDashboardPanel = document.getElementById('studentDashboardPanel');
+        const studentWelcomeName = document.getElementById('studentWelcomeName');
+        const studentSeatInfo = document.getElementById('studentSeatInfo');
+        const studentAttendanceBtn = document.getElementById('studentAttendanceBtn');
+        const studentPaymentBtn = document.getElementById('studentPaymentBtn');
+        const studentHistoryBtn = document.getElementById('studentHistoryBtn');
+        const studentLogoutBtn = document.getElementById('studentLogoutBtn');
+
+        // --- START: NEW SETTINGS ELEMENTS (QR/GPS) ---
+        const settingsPanel = document.getElementById('settingsPanel');
+        const qrLocationBtn = document.getElementById('qrLocationBtn'); 
+        const generateQRBtn = document.getElementById('generateQRBtn');
+        const setLocationBtn = document.getElementById('setLocationBtn');
+        const backFromSetupBtn = document.getElementById('backFromSetupBtn');
+        
+        // --- START: NEW STUDENT PAYMENT PANEL ELEMENTS ---
+        const studentPaymentPanel = document.getElementById('studentPaymentPanel');
+        const dueMonthsContainer = document.getElementById('dueMonthsContainer');
+        const proceedToPayBtn = document.getElementById('proceedToPayBtn');
+        const backFromStudentPaymentBtn = document.getElementById('backFromStudentPaymentBtn');
+        
+        // --- NEW MODAL ELEMENTS (for general payment marking) ---
+        const paymentModal = document.getElementById('paymentModal');
+        const modalHeader = document.getElementById('modalHeader');
+        const modalStudentName = document.getElementById('modalStudentName');
+        const modalRequiredAmount = document.getElementById('modalRequiredAmount');
+        const modalMobile = document.getElementById('modalMobile');
+        const modalYear = document.getElementById('modalYear');
+        const modalMonth = document.getElementById('modalMonth');
+        const fullPaymentRadio = document.getElementById('fullPaymentRadio');
+        const fullPaymentAmountDisplay = document.getElementById('fullPaymentAmountDisplay');
+        const partialPaymentRadio = document.getElementById('partialPaymentRadio');
+        const partialPaymentAmountInput = document.getElementById('partialPaymentAmount');
+        const paymentForm = document.getElementById('paymentForm');
+        const adminPaymentPasswordInput = document.getElementById('adminPaymentPassword');
+        
+        // --- NEW MODAL ELEMENTS (for WOW Payment Override) ---
+        const paymentOverrideModal = document.getElementById('paymentOverrideModal');
+        const overrideStudentName = document.getElementById('overrideStudentName');
+        const overrideCurrentShifts = document.getElementById('overrideCurrentShifts');
+        const overrideDefaultRate = document.getElementById('overrideDefaultRate');
+        const overrideMobile = document.getElementById('overrideMobile');
+        const newPerShiftRateInput = document.getElementById('newPerShiftRate');
+        const fixedTotalAmountInput = document.getElementById('fixedTotalAmount');
+        const paymentOverrideForm = document.getElementById('paymentOverrideForm');
+        const adminOverridePasswordInput = document.getElementById('adminOverridePassword');
+        const clearOverrideBtn = document.getElementById('clearOverrideBtn');
+        const totalShiftCount = document.getElementById('totalShiftCount');
+        
+        // --- NEW MODAL ELEMENTS (for Student Actions - Remove/Replace) ---
+        const studentActionModal = document.getElementById('studentActionModal');
+        const studentActionHeader = document.getElementById('studentActionHeader');
+        const studentActionName = document.getElementById('studentActionName');
+        const actionOptions = document.getElementById('actionOptions');
+        const replaceStudentForm = document.getElementById('replaceStudentForm');
+        const replaceMobileTarget = document.getElementById('replaceMobileTarget');
+        const replaceOriginalIndex = document.getElementById('replaceOriginalIndex');
+        const replaceFullNameInput = document.getElementById('replaceFullName');
+        const replaceFatherNameInput = document.getElementById('replaceFatherName');
+        const replaceAddressInput = document.getElementById('replaceAddress');
+        const replaceMobileNumberInput = document.getElementById('replaceMobileNumber');
+        const replaceAdmissionDateInput = document.getElementById('replaceAdmissionDate');
+        const replaceAdminPasswordInput = document.getElementById('replaceAdminPassword');
+        const closeStudentActionModal = document.getElementById('closeStudentActionModal');
+
+
+        // --- Credentials ---
+        const OWNER_MOBILE = '6201530654';
+        const OWNER_PASSWORD = 'Avinash';
+
+        // --- Global Data Store ---
+        let studentRecords = [];
+        // UPDATED: Added customRate and fixedTotalPayment to wowSeatRecords
+        let wowSeatRecords = []; 
+        let bookings = []; 
+        let paymentRecords = [
+            { mobile: '6201530654', year: 2025, month: 9, paidAmount: 900, requiredAmount: 900 }, // Full Paid Sep
+            { mobile: '9876543210', year: 2025, month: 8, paidAmount: 300, requiredAmount: 300 }, // Full Paid Aug
+            { mobile: '9876543210', year: 2025, month: 9, paidAmount: 200, requiredAmount: 300 }, // Partial Paid Sep
+            { mobile: '9988776655', year: 2025, month: 8, paidAmount: 1200, requiredAmount: 1200 }, // Full Paid Aug
+        ];
+        
+        let loggedInStudentMobile = null; 
+        let libraryLocation = { lat: 25.6127, lng: 85.1589, range: 20, set: false }; 
+        const LIBRARY_QR_CODE = "LibraryWorkAutomate_StaticQR_v1"; 
+
+        // --- CURRENT DATE LOGIC ---
+        const CURRENT_DATE = new Date();
+        
+        const currentMonthIndex = CURRENT_DATE.getMonth();
+        const currentYear = CURRENT_DATE.getFullYear();
+        
+        // --- DUMMY DATA (Attendance remains the same) ---
+        let attendanceRecords = [
+            { mobile: '6201530654', date: '2025-10-11', times: [{ in: '9:00a', out: '1:00p' }] },
+            { mobile: '6201530654', date: '2025-10-10', times: [{ in: '8:00a', out: '12:00p' }, { in: '2:10p', out: '5:15p' }] },
+            { mobile: '6201530654', date: '2025-10-09', times: [] }, 
+            { mobile: '6201530654', date: '2025-10-08', times: [{ in: '2:05p', out: '6:00p' }] },
+            { mobile: '6201530654', date: '2025-10-07', times: [{ in: '2:00p', out: '6:10p' }] },
+            { mobile: '6201530654', date: '2025-10-06', times: [] },
+            { mobile: '6201530654', date: '2025-10-05', times: [{ in: '2:15p', out: '6:20p' }] },
+            { mobile: '6201530654', date: '2025-10-04', times: [{ in: '2:15p', out: '6:20p' }] },
+            { mobile: '6201530654', date: '2025-10-03', times: [{ in: '2:15p', out: '6:20p' }] },
+            { mobile: '6201530654', date: '2025-10-02', times: [{ in: '2:15p', out: '6:20p' }] },
+            { mobile: '6201530654', date: '2025-10-01', times: [{ in: '2:15p', out: '6:20p' }] },
+            { mobile: '9876543210', date: '2025-10-11', times: [] },
+            { mobile: '9876543210', date: '2025-10-10', times: [{ in: '10:00a', out: '2:00p' }] },
+            { mobile: '9876543210', date: '2025-10-09', times: [{ in: '10:05a', out: '2:10p' }] },
+            { mobile: '9876543210', date: '2025-10-08', times: [{ in: '10:00a', out: '2:05p' }] },
+            { mobile: '9876543210', date: '2025-10-07', times: [] },
+            { mobile: '9876543210', date: '2025-10-06', times: [{ in: '10:10a', out: '2:00p' }] },
+            { mobile: '9876543210', date: '2025-10-05', times: [{ in: '10:10a', out: '2:00p' }] },
+            { mobile: '9876543210', date: '2025-10-04', times: [{ in: '10:10a', out: '2:00p' }] },
+            { mobile: '9876543210', date: '2025-10-03', times: [{ in: '10:10a', out: '2:00p' }] },
+            { mobile: '9876543210', date: '2025-10-02', times: [{ in: '10:10a', out: '2:00p' }] },
+            { mobile: '9876543210', date: '2025-10-01', times: [{ in: '10:10a', out: '2:00p' }] },
+            { mobile: '9988776655', date: '2025-10-11', times: [{ in: '6:00a', out: '10:00a' }] },
+            { mobile: '9988776655', date: '2025-10-10', times: [{ in: '6:00a', out: '10:00a' }] },
+            { mobile: '9988776655', date: '2025-10-09', times: [{ in: '6:05a', out: '10:10a' }] },
+            { mobile: '9988776655', date: '2025-10-08', times: [{ in: '6:02a', out: '10:05a' }] },
+            { mobile: '9988776655', date: '2025-10-07', times: [{ in: '6:07a', out: '10:00a' }] },
+            { mobile: '9988776655', date: '2025-10-06', times: [{ in: '6:01a', out: '10:03a' }] },
+            { mobile: '9988776655', date: '2025-10-05', times: [{ in: '6:01a', out: '10:03a' }] },
+            { mobile: '9988776655', date: '2025-10-04', times: [{ in: '6:01a', out: '10:03a' }] },
+            { mobile: '9988776655', date: '2025-10-03', times: [{ in: '6:01a', out: '10:03a' }] },
+            { mobile: '9988776655', date: '2025-10-02', times: [{ in: '6:01a', out: '10:03a' }] },
+            { mobile: '9988776655', date: '2025-10-01', times: [{ in: '6:01a', out: '10:03a' }] },
+        ];
+        
+        // --- Seat Details Logic (Graph) ---
+        let TOTAL_SEATS = 50; 
+        const MAX_SEATS = 500; 
+        const SHIFTS = 4;
+        const SECRET_CLICKS_REQUIRED = 6; 
+        const DEFAULT_RATE_PER_SHIFT = 300; // Renamed from RATE_PER_SHIFT
+        const shiftTimes = { 1: "6AM-10AM", 2: "10AM-2PM", 3: "2PM-6PM", 4: "6PM-10PM" };
+        let clickCounter = 0; 
+        let clickTimer = null; 
+        const MAX_CLICK_DELAY = 400; 
+        
+        function updateSeatCount() {
+            if (!seatCountInput) return;
+            const newCount = parseInt(seatCountInput.value);
+            
+            if (newCount >= 1 && newCount <= MAX_SEATS) {
+                TOTAL_SEATS = newCount;
+                bookings = bookings.filter(b => b.seat <= TOTAL_SEATS);
+                generateTable(); 
+                alert(`कुल सीटें अब ${TOTAL_SEATS} पर सेट हो गई हैं।`);
+                if(adminControls) { adminControls.classList.remove('show'); adminControls.style.display = 'none'; }
+            } else {
+                alert(` कृपया 1 और ${MAX_SEATS} के बीच एक वैध सीट संख्या दर्ज करें।`);
+                seatCountInput.value = TOTAL_SEATS;
+            }
+        }
+
+        function generateTable() {
+            if (!tableBody) return; 
+            tableBody.innerHTML = ''; 
+            
+            for (let i = 1; i <= TOTAL_SEATS; i++) { 
+                const row = tableBody.insertRow();
+                const seatNoCell = row.insertCell();
+                seatNoCell.textContent = i;
+                seatNoCell.classList.add('seat-number-cell'); 
+                seatNoCell.addEventListener('click', handleSecretClick);
+
+                for (let j = 1; j <= SHIFTS; j++) {
+                    const shiftCell = row.insertCell();
+                    const shiftBox = document.createElement('div');
+                    shiftBox.classList.add('shift-box');
+                    shiftBox.dataset.seat = i;
+                    shiftBox.dataset.shift = j;
+                    shiftBox.addEventListener('dblclick', handleBooking);
+                    shiftCell.appendChild(shiftBox);
+                }
+            }
+            updateTableStatus();
+        }
+        
+        function getStudentDetailsByMobile(mobile) {
+            return studentRecords.find(s => s.mobileNumber === mobile);
+        }
+
+        function handleBooking(event) {
+            event.preventDefault();
+            clearTimeout(clickTimer);
+            clickCounter = 0;
+            
+            const box = event.currentTarget;
+            const seat = parseInt(box.dataset.seat);
+            const shift = parseInt(box.dataset.shift);
+            
+            const existingBookingIndex = bookings.findIndex(b => b.seat === seat && b.shift === shift);
+
+            if (existingBookingIndex !== -1) {
+                const existingBooking = bookings[existingBookingIndex];
+                const confirmCancel = confirm(`सीट ${seat}, शिफ्ट ${shift} (${shiftTimes[shift]} - ${existingBooking.name || existingBooking.mobile}) को कैंसिल करना चाहते हैं?`);
+                
+                if (confirmCancel) {
+                    const mobileToSync = existingBooking.mobile;
+                    bookings.splice(existingBookingIndex, 1);
+                    updateWowDataFromGraphByMobile(mobileToSync);
+                    alert('बुकिंग कैंसिल कर दी गई है।');
+                }
+            } else {
+                const mobileToBook = prompt(`सीट ${seat}, शिफ्ट ${shift} (${shiftTimes[shift]}) बुक करने के लिए छात्र का 10 अंकों का मोबाइल नंबर भरें:`);
+                if (!mobileToBook || mobileToBook.length !== 10 || isNaN(mobileToBook)) {
+                    if (mobileToBook !== null) alert("अमान्य मोबाइल नंबर। बुकिंग रद्द की गई।");
+                    return;
+                }
+                
+                const studentData = getStudentDetailsByMobile(mobileToBook);
+                if (!studentData || !studentData.fullName) {
+                    alert("छात्र रिकॉर्ड नहीं मिला या हटाया गया है। पहले 'Students Data' में छात्र को जोड़ें/रिप्लेस करें।");
+                    return;
+                }
+                
+                bookings.push({ seat, shift, name: studentData.fullName, address: studentData.address, mobile: studentData.mobileNumber });
+                
+                const wowRecord = wowSeatRecords.find(r => r.mobile === mobileToBook);
+                if (!wowRecord) return; // Should not happen if data initialized properly
+                
+                wowRecord.seatNo = seat.toString();
+
+                updateWowDataFromGraphByMobile(mobileToBook);
+                alert(`${studentData.fullName} के लिए सीट ${seat}, शिफ्ट ${shift} बुक कर दी गई है!`);
+            }
+            updateTableStatus(); 
+        }
+        
+        function handleSecretClick(event) {
+            if (!adminControls) return; 
+            event.preventDefault(); 
+            clickCounter++;
+            clearTimeout(clickTimer);
+            if (clickCounter === SECRET_CLICKS_REQUIRED) {
+                adminControls.classList.add('show');
+                adminControls.style.display = 'flex';
+                alert('एडमिन कंट्रोल पैनल सक्रिय हो गया है। अब आप सीटें सेट कर सकते हैं।');
+                clickCounter = 0; 
+                return;
+            }
+            clickTimer = setTimeout(() => { clickCounter = 0; }, MAX_CLICK_DELAY); 
+        }
+
+        function updateTableStatus() {
+            document.querySelectorAll('#bookingTable .shift-box').forEach(box => { 
+                const seat = parseInt(box.dataset.seat);
+                const shift = parseInt(box.dataset.shift);
+                const booking = bookings.find(b => b.seat === seat && b.shift === shift);
+                box.classList.remove('available', 'booked');
+                if (booking) {
+                    box.classList.add('booked');
+                    box.textContent = `${booking.name || booking.mobile.slice(-4)}\n(${booking.mobile.slice(-4)})`;
+                } else {
+                    box.classList.add('available');
+                    box.textContent = 'Available';
+                }
+            });
+        }
+        
+        // --- End Seat Graph Logic ---
+        
+        // --- WOW Logic ---
+        const shiftIndexToTime = { 1: {start: '6AM', end: '10AM'}, 2: {start: '10AM', end: '2PM'}, 3: {start: '2PM', end: '6PM'}, 4: {start: '6PM', end: '10PM'} };
+       
+        function updateWowDataFromGraphByMobile(mobile, reRenderWow = true) {
+            const wowRecord = wowSeatRecords.find(r => r.mobile === mobile);
+            if (!wowRecord) return; 
+
+            const bookedShifts = bookings.filter(b => b.mobile === mobile).sort((a, b) => a.shift - b.shift);
+            const shiftCount = bookedShifts.length;
+            
+            if (shiftCount === 0) {
+                wowRecord.seatNo = '';
+            }
+            
+            let paymentAmount;
+            
+            // Logic for Custom Payment
+            if (wowRecord.fixedTotalPayment && wowRecord.fixedTotalPayment > 0) {
+                paymentAmount = wowRecord.fixedTotalPayment;
+            } else if (wowRecord.customRate && wowRecord.customRate > 0) {
+                 paymentAmount = shiftCount * wowRecord.customRate;
+            } else {
+                 paymentAmount = shiftCount * DEFAULT_RATE_PER_SHIFT;
+            }
+
+
+            if (bookedShifts.length === 0) {
+                wowRecord.batchString = 'N/A';
+            } else {
+                let batchParts = [];
+                let currentStartShiftIndex = null;
+                for(let i = 0; i < SHIFTS; i++) {
+                    const shiftIndex = i + 1;
+                    const isBooked = bookedShifts.some(b => b.shift === shiftIndex);
+                    if (isBooked) {
+                        if (currentStartShiftIndex === null) currentStartShiftIndex = shiftIndex;
+                    } else {
+                        if (currentStartShiftIndex !== null) {
+                            const startTime = shiftIndexToTime[currentStartShiftIndex].start;
+                            const endTime = shiftIndexToTime[shiftIndex - 1].end;
+                            batchParts.push(`${startTime}-${endTime}`);
+                            currentStartShiftIndex = null;
+                        }
+                    }
+                }
+                if (currentStartShiftIndex !== null) {
+                    const startTime = shiftIndexToTime[currentStartShiftIndex].start;
+                    const endTime = shiftIndexToTime[SHIFTS].end;
+                    batchParts.push(`${startTime}-${endTime}`);
+                }
+                wowRecord.batchString = batchParts.join(', ');
+            }
+            
+            wowRecord.shifts = shiftCount; 
+            wowRecord.payment = paymentAmount; 
+            
+            if (reRenderWow && wowViewPanel.style.display === 'block') renderWowTable();
+        }
+
+        function updateWowRecord(element, mobile, key, value) {
+            const trimmedValue = value.trim();
+            if (key !== 'seatNo') return;
+
+            const originalBookingsForStudent = bookings.filter(b => b.mobile === mobile);
+            const wowRecord = wowSeatRecords.find(r => r.mobile === mobile);
+            if (!wowRecord) return;
+            
+            const originalSeatNo = wowRecord.seatNo;
+            const studentData = getStudentDetailsByMobile(mobile);
+
+            let seatNo = 0, shiftNo = null, isSingleShiftRequest = false;
+            if (trimmedValue.includes('.')) {
+                isSingleShiftRequest = true;
+                const parts = trimmedValue.split('.');
+                seatNo = parseInt(parts[0]);
+                shiftNo = parseInt(parts[1]);
+                if (isNaN(seatNo) || seatNo <= 0 || isNaN(shiftNo) || ![1, 2, 3, 4].includes(shiftNo)) {
+                    alert("अमान्य प्रारूप। 'Seat.Shift' का उपयोग करें (जैसे, 5.1)। शिफ्ट 1, 2, 3, या 4 होना चाहिए।");
+                    return;
+                }
+            } else if (trimmedValue) {
+                seatNo = parseInt(trimmedValue);
+                if (isNaN(seatNo) || seatNo <= 0) {
+                     alert("अमान्य सीट संख्या।");
+                     return;
+                }
+            }
+
+            if (!trimmedValue) {
+                bookings = bookings.filter(b => b.mobile !== mobile);
+                wowRecord.seatNo = '';
+            }
+            else if (isSingleShiftRequest) {
+                if (originalBookingsForStudent.length > 0 && originalBookingsForStudent.some(b => b.seat !== seatNo)) {
+                    alert(`यह छात्र सीट ${originalSeatNo} पर है। सीट ${seatNo} पर बुकिंग करने से पहले कृपया पिछली बुकिंग साफ़ करें या सभी बुकिंग एक ही सीट पर रखें।`);
+                    return;
+                }
+                
+                // Check if this specific seat/shift is already booked by the student
+                if (originalBookingsForStudent.some(b => b.seat === seatNo && b.shift === shiftNo)) {
+                    alert(`छात्र के पास पहले से ही सीट ${seatNo}, शिफ्ट ${shiftNo} बुक है।`);
+                    return;
+                }
+                
+                // Check if this specific seat/shift is taken by someone else
+                const isTaken = bookings.some(b => b.seat === seatNo && b.shift === shiftNo && b.mobile !== mobile);
+                if (isTaken) {
+                    alert(`त्रुटि: सीट ${seatNo}, शिफ्ट ${shiftNo} किसी अन्य छात्र द्वारा पहले ही ले ली गई है।`);
+                    return;
+                }
+                bookings.push({ seat: seatNo, shift: shiftNo, name: studentData.fullName, address: studentData.address, mobile });
+                wowRecord.seatNo = seatNo.toString();
+                alert(`सीट ${seatNo}, शिफ्ट ${shiftNo} के लिए बुकिंग जोड़ दी गई है।`);
+            }
+            else {
+                const conflicts = bookings.filter(b => b.seat === seatNo && b.mobile !== mobile);
+                if (conflicts.length > 0) {
+                    const conflictShifts = conflicts.map(c => c.shift).join(', ');
+                    alert(`त्रुटि: पूरे दिन का आवंटन नहीं किया जा सकता। सीट ${seatNo} आंशिक रूप से अन्य छात्रों द्वारा शिफ्ट(ओं) पर कब्जा कर लिया गया है: ${conflictShifts}.`);
+                    return;
+                }
+                // Remove any existing bookings for this student
+                bookings = bookings.filter(b => b.mobile !== mobile);
+                for (let i = 1; i <= 4; i++) {
+                    bookings.push({ seat: seatNo, shift: i, name: studentData.fullName, address: studentData.address, mobile });
+                }
+                wowRecord.seatNo = seatNo.toString();
+                alert(`${studentData.fullName} को सीट ${seatNo} के लिए पूरा दिन आवंटित किया गया।`);
+            }
+            updateWowDataFromGraphByMobile(mobile, true);
+            updateTableStatus();
+        }
+        
+        function handleWowPaymentDoubleClick(mobile) {
+            const student = getStudentDetailsByMobile(mobile);
+            const wowRecord = wowSeatRecords.find(r => r.mobile === mobile);
+            
+            if (!wowRecord || wowRecord.shifts === 0) {
+                alert("पहले सीट/शिफ्ट आवंटित करें।");
+                return;
+            }
+
+            overrideMobile.value = mobile;
+            overrideStudentName.textContent = student.fullName || mobile;
+            overrideCurrentShifts.textContent = wowRecord.shifts;
+            overrideDefaultRate.textContent = DEFAULT_RATE_PER_SHIFT;
+            
+            // Display current override values
+            newPerShiftRateInput.value = wowRecord.customRate || '';
+            fixedTotalAmountInput.value = wowRecord.fixedTotalPayment || '';
+            totalShiftCount.textContent = `${wowRecord.shifts} Shifts`;
+
+            paymentOverrideModal.style.display = 'flex';
+        }
+        
+        clearOverrideBtn.addEventListener('click', () => {
+             const mobile = overrideMobile.value;
+             const password = prompt("Overrides हटाने के लिए Admin Password दर्ज करें:");
+             
+             if (password !== OWNER_PASSWORD) {
+                alert("Incorrect Admin Password!");
+                return;
+             }
+             
+             const wowRecord = wowSeatRecords.find(r => r.mobile === mobile);
+             if (wowRecord) {
+                 wowRecord.customRate = 0;
+                 wowRecord.fixedTotalPayment = 0;
+                 updateWowDataFromGraphByMobile(mobile, true);
+                 hidePaymentOverrideModal();
+                 alert("सभी पेमेंट ओवरराइड हटा दिए गए हैं। अब डिफ़ॉल्ट दर लागू होगी।");
+             }
+        });
+        
+        paymentOverrideForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            
+            const mobile = overrideMobile.value;
+            const newRate = parseInt(newPerShiftRateInput.value) || 0;
+            const fixedTotal = parseInt(fixedTotalAmountInput.value) || 0;
+            const password = adminOverridePasswordInput.value;
+            
+            if (password !== OWNER_PASSWORD) {
+                alert("Incorrect Admin Password!");
+                adminOverridePasswordInput.value = '';
+                return;
+            }
+            
+            const wowRecord = wowSeatRecords.find(r => r.mobile === mobile);
+            if (wowRecord) {
+                wowRecord.customRate = newRate;
+                wowRecord.fixedTotalPayment = fixedTotal;
+                
+                updateWowDataFromGraphByMobile(mobile, true);
+                hidePaymentOverrideModal();
+                alert(`Payment Overrides Saved! \nPer Shift Rate: ${newRate || 'Default'}\nFixed Total: ${fixedTotal || 'None'}`);
+            }
+        });
+        
+        function hidePaymentOverrideModal() {
+            paymentOverrideModal.style.display = 'none';
+            paymentOverrideForm.reset();
+            adminOverridePasswordInput.value = '';
+        }
+        
+        function renderWowTable() {
+            if (!wowTableBody) return;
+            wowTableBody.innerHTML = '';
+            
+            studentRecords.forEach((student) => {
+                const row = wowTableBody.insertRow();
+                
+                const wowRecord = wowSeatRecords.find(r => r.mobile === student.mobileNumber);
+                if (!wowRecord) return; // Should not happen if initialization is correct
+
+                const isSeatAssigned = wowRecord && wowRecord.seatNo;
+                const highlightColor = '#d1e5f0'; 
+                if (isSeatAssigned) row.style.backgroundColor = highlightColor;
+                
+                const seatNoCell = row.insertCell();
+                const seatNoInput = document.createElement('input');
+                seatNoInput.type = 'text';
+                seatNoInput.className = 'wow-input-seat';
+                seatNoInput.placeholder = 'Seat or S.Shift';
+                
+                const bookedShifts = bookings.filter(b => b.mobile === student.mobileNumber).sort((a, b) => a.shift - b.shift);
+                let displaySeatValue = '';
+                if (bookedShifts.length > 0) {
+                    const seat = wowRecord.seatNo;
+                    if (bookedShifts.length === 4) {
+                        displaySeatValue = seat;
+                    } else {
+                        // Display the first booked shift number
+                        displaySeatValue = `${seat}.${bookedShifts[0].shift}`;
+                    }
+                }
+                seatNoInput.value = displaySeatValue;
+                seatNoInput.onchange = function() {
+                    updateWowRecord(this, student.mobileNumber, 'seatNo', this.value);
+                };
+                seatNoCell.appendChild(seatNoInput);
+
+                row.insertCell().textContent = student.fullName || '--- REMOVED ---'; 
+                row.insertCell().textContent = student.fatherName || '--- REMOVED ---'; 
+                row.insertCell().textContent = student.address || '--- REMOVED ---'; 
+                row.insertCell().textContent = student.mobileNumber;
+                
+                const batchCell = row.insertCell();
+                const batchInput = document.createElement('textarea'); 
+                batchInput.readOnly = true;
+                batchInput.className = 'wow-batch-input';
+                batchInput.value = wowRecord.batchString || 'N/A';
+                batchCell.appendChild(batchInput);
+
+                const shiftsCell = row.insertCell();
+                shiftsCell.textContent = `${wowRecord.shifts || 0} Shift${(wowRecord.shifts || 0) !== 1 ? 's' : ''}`; 
+
+                const paymentCell = row.insertCell();
+                paymentCell.innerHTML = `₹${wowRecord.payment || 0}`;
+                
+                // Add Double-Click event handler to the Payment Cell
+                if (wowRecord.shifts > 0) {
+                     paymentCell.addEventListener('dblclick', () => handleWowPaymentDoubleClick(student.mobileNumber));
+                }
+                
+                // Add indicators for override
+                if (wowRecord.fixedTotalPayment > 0) {
+                    paymentCell.innerHTML += `<br><span style="font-size: 0.7em; color: #f44336; font-weight: bold;">(Fixed Total)</span>`;
+                } else if (wowRecord.customRate > 0) {
+                    paymentCell.innerHTML += `<br><span style="font-size: 0.7em; color: #009688; font-weight: bold;">(Rate: ₹${wowRecord.customRate})</span>`;
+                }
+            });
+        }
+        
+        // --- Pay Details Logic ---
+        function getRequiredAmount(mobile) {
+            const wowRecord = wowSeatRecords.find(r => r.mobile === mobile);
+            if (!wowRecord) return DEFAULT_RATE_PER_SHIFT; // Default to 1 shift payment if not in WOW
+            
+            const shiftCount = wowRecord.shifts || 0;
+            if (shiftCount === 0) return DEFAULT_RATE_PER_SHIFT;
+
+            if (wowRecord.fixedTotalPayment && wowRecord.fixedTotalPayment > 0) {
+                return wowRecord.fixedTotalPayment;
+            } else if (wowRecord.customRate && wowRecord.customRate > 0) {
+                return shiftCount * wowRecord.customRate;
+            } else {
+                return shiftCount * DEFAULT_RATE_PER_SHIFT;
+            }
+        }
+
+        function getRemainingDueAmount(mobile, month, year) {
+             const payment = paymentRecords.find(p => p.mobile === mobile && p.year === year && p.month === month);
+             if (!payment) return 0;
+             const remaining = payment.requiredAmount - payment.paidAmount;
+             return remaining > 0 ? remaining : 0;
+        }
+
+        function renderPayDetailsTable() {
+            const tableBody = document.getElementById('payDetailsTableBody');
+            const headerRow = document.getElementById('payDetailsHeaderRow');
+            const subHeaderRow = document.getElementById('payDetailsSubHeaderRow');
+            if (!tableBody || !headerRow || !subHeaderRow) return;
+
+            tableBody.innerHTML = ''; headerRow.innerHTML = ''; subHeaderRow.innerHTML = '';
+            
+            const today = CURRENT_DATE;
+            today.setHours(0, 0, 0, 0);
+            const currentMonth = today.getMonth(); 
+            const currentYear = today.getFullYear();
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            const monthHeaders = [];
+            for (let i = 0; i < 3; i++) {
+                let targetDate = new Date(currentYear, currentMonth - i, 1);
+                monthHeaders.push({ 
+                    name: monthNames[targetDate.getMonth()], 
+                    month: targetDate.getMonth() + 1, 
+                    year: targetDate.getFullYear(),
+                    shortName: monthNames[targetDate.getMonth()]
+                });
+            }
+
+            headerRow.innerHTML = `
+                <th style="width: 4%;">RM</th>
+                <th style="width: 4%;">MD</th>
+                <th style="width: 4%;">SI</th>
+                <th style="width: 18%;">Full Name</th>
+                <th style="width: 18%;">Address / Mobile</th>
+                <th style="width: 12%;">Admission Due</th>
+                <th colspan="${monthHeaders.length}" style="width: 40%;">Payment Status (Last ${monthHeaders.length} Months)</th>
+            `;
+            
+            subHeaderRow.innerHTML = `<th colspan="6"></th>`; 
+            monthHeaders.forEach(header => {
+                const th = document.createElement('th');
+                th.className = 'month-sub-header';
+                th.textContent = `${header.name} ${String(header.year).slice(-2)}`;
+                subHeaderRow.appendChild(th);
+            });
+
+            studentRecords.forEach((student, index) => {
+                const row = tableBody.insertRow();
+                const admissionDate = new Date(student.admissionDate);
+                
+                let monthsSinceAdmission = (today.getFullYear() - admissionDate.getFullYear()) * 12 + (today.getMonth() - admissionDate.getMonth());
+                if (today.getDate() < admissionDate.getDate()) monthsSinceAdmission--;
+                
+                const paidCount = paymentRecords.filter(p => p.mobile === student.mobileNumber).length;
+                const md = Math.max(0, monthsSinceAdmission - paidCount);
+
+                const admissionDay = admissionDate.getDate();
+                const thisMonthDueDate = new Date(today.getFullYear(), today.getMonth(), admissionDay);
+                let dayDiff = Math.floor((thisMonthDueDate - today) / (1000 * 60 * 60 * 24)); 
+                
+                let admissionDisplay;
+                if (dayDiff > 0) { 
+                    admissionDisplay = `<span class="admission-status admission-future">${dayDiff} day${dayDiff !== 1 ? 's' : ''} after</span>`;
+                } else if (dayDiff === 0) { 
+                    admissionDisplay = `<span class="admission-status admission-due">Due Today</span>`;
+                } else { 
+                    const daysLate = Math.abs(dayDiff);
+                    admissionDisplay = `<span class="admission-status admission-late">${daysLate} day${daysLate !== 1 ? 's' : ''} late</span>`;
+                }
+                
+                const wowRecord = wowSeatRecords.find(w => w.mobile === student.mobileNumber);
+                let fullNameDisplay = student.fullName || '--- REMOVED ---';
+                if (wowRecord) {
+                    const currentWowRecord = wowSeatRecords.find(r => r.mobile === student.mobileNumber);
+                    if (wowRecord.seatNo && currentWowRecord.shifts > 0) {
+                        fullNameDisplay += ` (<span style="color: blue; font-weight: bold;">${wowRecord.seatNo}</span>-<span style="color: red; font-weight: bold;">${currentWowRecord.shifts}</span>)`;
+                        
+                        // Add override indicator
+                        if (wowRecord.fixedTotalPayment > 0) {
+                             fullNameDisplay += `<span style="color: #f44336; font-weight: bold;">*</span>`;
+                        } else if (wowRecord.customRate > 0) {
+                             fullNameDisplay += `<span style="color: #009688; font-weight: bold;">*</span>`;
+                        }
+                    }
+                }
+                
+                // --- NEW RM Logic ---
+                let rmDisplay = '-';
+                const partialPayments = paymentRecords.filter(p => p.mobile === student.mobileNumber && p.requiredAmount > p.paidAmount);
+
+                if (partialPayments.length > 0) {
+                    const latestPartial = partialPayments.sort((a, b) => {
+                        if (a.year !== b.year) return b.year - a.year;
+                        return b.month - a.month;
+                    })[0];
+                    const remaining = latestPartial.requiredAmount - latestPartial.paidAmount;
+                    const monthShort = monthNames[latestPartial.month - 1];
+                    rmDisplay = `<span style="color: #ffc107; font-weight: bold;">(${remaining} ${monthShort})</span>`;
+                }
+
+                row.insertCell().innerHTML = rmDisplay; // RM column
+                row.insertCell().textContent = md; // MD column
+                row.insertCell().textContent = index + 1;
+                row.insertCell().innerHTML = fullNameDisplay;
+                row.insertCell().innerHTML = `<div class="address-cell">${student.address || '--- REMOVED ---'}<br>${student.mobileNumber}</div>`;
+                row.insertCell().innerHTML = admissionDisplay;
+
+                monthHeaders.forEach(header => {
+                    const payment = paymentRecords.find(p => p.mobile === student.mobileNumber && p.year === header.year && p.month === header.month);
+                    
+                    const cell = row.insertCell();
+                    if (payment) {
+                        cell.innerHTML = '<span class="payment-cell">✓</span>';
+                    } else {
+                        cell.textContent = '';
+                    }
+                });
+            });
+        }
+        
+        // --- Modal Control Functions (General Payment) ---
+        function showPaymentModal(mobile, year, month) {
+            const student = getStudentDetailsByMobile(mobile);
+            const requiredAmount = getRequiredAmount(mobile); 
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            modalHeader.textContent = `Payment for ${monthNames[month - 1]} ${year}`;
+            modalStudentName.textContent = student.fullName || '--- REMOVED ---';
+            modalRequiredAmount.textContent = `₹${requiredAmount}`;
+            fullPaymentAmountDisplay.textContent = `₹${requiredAmount}`;
+            partialPaymentAmountInput.min = 1;
+            partialPaymentAmountInput.max = requiredAmount - 1; 
+
+            modalMobile.value = mobile;
+            modalYear.value = year;
+            modalMonth.value = month;
+            
+            // Reset state
+            fullPaymentRadio.checked = true;
+            partialPaymentRadio.checked = false;
+            partialPaymentAmountInput.disabled = true;
+            partialPaymentAmountInput.value = '';
+            adminPaymentPasswordInput.value = '';
+            
+            paymentModal.style.display = 'flex';
+        }
+        
+        function hidePaymentModal() {
+            paymentModal.style.display = 'none';
+        }
+
+        // --- Event Handlers for Modal (General Payment) ---
+        partialPaymentRadio.addEventListener('change', () => {
+            if (partialPaymentRadio.checked) {
+                partialPaymentAmountInput.disabled = false;
+                partialPaymentAmountInput.focus();
+            } else {
+                partialPaymentAmountInput.disabled = true;
+                partialPaymentAmountInput.value = '';
+            }
+        });
+        
+        fullPaymentRadio.addEventListener('change', () => {
+            if (fullPaymentRadio.checked) {
+                partialPaymentAmountInput.disabled = true;
+                partialPaymentAmountInput.value = '';
+            }
+        });
+        
+        paymentForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const mobile = modalMobile.value;
+            const year = parseInt(modalYear.value);
+            const month = parseInt(modalMonth.value);
+            const requiredAmount = parseInt(modalRequiredAmount.textContent.replace('₹', ''));
+            const password = adminPaymentPasswordInput.value;
+
+            if (password !== OWNER_PASSWORD) {
+                alert("Incorrect Admin Password!");
+                adminPaymentPasswordInput.value = '';
+                return;
+            }
+            
+            let paidAmount;
+            if (fullPaymentRadio.checked) {
+                paidAmount = requiredAmount;
+            } else {
+                paidAmount = parseInt(partialPaymentAmountInput.value);
+                if (isNaN(paidAmount) || paidAmount <= 0 || paidAmount >= requiredAmount) {
+                     alert(`Fill Payment must be between 1 and ${requiredAmount - 1}.`);
+                     return;
+                }
+            }
+            
+            // Remove existing record if found (for re-marking/correction)
+            const existingIndex = paymentRecords.findIndex(p => p.mobile === mobile && p.year === year && p.month === month);
+            if (existingIndex > -1) {
+                 paymentRecords.splice(existingIndex, 1);
+            }
+            
+            // Add new payment record
+            paymentRecords.push({ mobile, year, month, requiredAmount, paidAmount });
+            
+            alert(`Payment recorded for ${getStudentDetailsByMobile(mobile).fullName || mobile}.\nPaid: ₹${paidAmount}/${requiredAmount}`);
+            
+            hidePaymentModal();
+            renderPDetailsFullYearView(); 
+            renderPayDetailsTable(); // Update Pay Details table after marking
+        });
+
+
+        // Handle PDetails Marking
+        function handlePDetailsMarking(event) {
+            const cell = event.currentTarget;
+            if (cell.textContent.includes('-')) return; 
+
+            const mobile = cell.dataset.mobile;
+            const year = parseInt(cell.dataset.year);
+            const month = parseInt(cell.dataset.month);
+            
+            // Calculate the required amount dynamically
+            const requiredAmount = getRequiredAmount(mobile);
+            
+            // If already paid, prompt for removal/correction
+            const existingPayment = paymentRecords.find(p => p.mobile === mobile && p.year === year && p.month === month);
+            if (existingPayment) {
+                 const confirmDelete = prompt(`Payment already recorded (₹${existingPayment.paidAmount}/${existingPayment.requiredAmount}). Enter owner password to REMOVE/MODIFY it:`);
+                 if (confirmDelete === OWNER_PASSWORD) {
+                     paymentRecords.splice(paymentRecords.findIndex(p => p.mobile === mobile && p.year === year && p.month === month), 1);
+                     renderPDetailsFullYearView();
+                     renderPayDetailsTable();
+                     alert("Payment removed successfully.");
+                 } else if (confirmDelete !== null) {
+                      alert("Incorrect password! Action cancelled.");
+                 }
+                 return;
+            }
+
+            showPaymentModal(mobile, year, month);
+        }
+
+        function renderPDetailsFullYearView() {
+            const tableBody = document.getElementById('pDetailsTableBodyFullYear');
+            const headerRow = document.getElementById('pDetailsHeaderRowFullYear');
+            const subHeaderRow = document.getElementById('pDetailsSubHeaderRowFullYear');
+            if (!tableBody || !headerRow || !subHeaderRow) return;
+
+            tableBody.innerHTML = ''; headerRow.innerHTML = ''; subHeaderRow.innerHTML = '';
+            
+            const today = CURRENT_DATE; 
+            const currentYear = today.getFullYear();
+            const monthShortNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            headerRow.innerHTML = `
+                <th style="width: 4%;">SI</th>
+                <th style="width: 18%;">Full Name</th>
+                <th style="width: 18%;">Address / Mobile</th>
+                <th colspan="12" style="text-align: center;">Payment Status for ${currentYear}</th>
+            `;
+            
+            subHeaderRow.innerHTML = `<th colspan="3"></th>`; 
+            monthShortNames.forEach(name => {
+                const th = document.createElement('th');
+                th.className = 'month-sub-header';
+                th.textContent = name;
+                subHeaderRow.appendChild(th);
+            });
+
+            studentRecords.forEach((student, index) => {
+                const row = tableBody.insertRow();
+                const admissionDate = new Date(student.admissionDate);
+                admissionDate.setHours(0,0,0,0); 
+                
+                row.insertCell().textContent = index + 1;
+
+                const wowRecord = wowSeatRecords.find(w => w.mobile === student.mobileNumber);
+                let fullNameDisplay = student.fullName || '--- REMOVED ---';
+                if (wowRecord) {
+                    const currentWowRecord = wowSeatRecords.find(r => r.mobile === student.mobileNumber);
+                    if (wowRecord.seatNo && currentWowRecord.shifts > 0) {
+                        fullNameDisplay += ` (<span style="color: blue; font-weight: bold;">${wowRecord.seatNo}</span>-<span style="color: red; font-weight: bold;">${currentWowRecord.shifts}</span>)`;
+                        // Add override indicator
+                        if (wowRecord.fixedTotalPayment > 0) {
+                             fullNameDisplay += `<span style="color: #f44336; font-weight: bold;">*</span>`;
+                        } else if (wowRecord.customRate > 0) {
+                             fullNameDisplay += `<span style="color: #009688; font-weight: bold;">*</span>`;
+                        }
+                    }
+                }
+                row.insertCell().innerHTML = fullNameDisplay;
+
+                row.insertCell().innerHTML = `<div class="address-cell">${student.address || '--- REMOVED ---'}<br>${student.mobileNumber}</div>`;
+
+                for (let i = 0; i < 12; i++) { 
+                    const cell = row.insertCell();
+                    cell.style.textAlign = 'center';
+                    
+                    let isMonthActive = true;
+                    if (admissionDate.getFullYear() > currentYear) {
+                        isMonthActive = false; 
+                    } else if (admissionDate.getFullYear() === currentYear && admissionDate.getMonth() > i) {
+                        isMonthActive = false; 
+                    }
+                    
+                    if (!isMonthActive) {
+                        cell.innerHTML = '<span style="color: #999; font-weight: bold;">-</span>';
+                    } else {
+                        const payment = paymentRecords.find(p => p.mobile === student.mobileNumber && p.year === currentYear && p.month === (i + 1));
+                        
+                        if (payment) {
+                            const remaining = payment.requiredAmount - payment.paidAmount;
+                            if (remaining > 0) {
+                                // Partial Payment
+                                cell.innerHTML = `<span class="payment-cell" style="color: #ffc107;">✓</span> <span style="font-size: 0.7em; color: #ffc107;">(₹${remaining} Due)</span>`;
+                            } else {
+                                // Full Payment
+                                cell.innerHTML = '<span class="payment-cell">✓</span>';
+                            }
+                        }
+                        
+                        cell.dataset.mobile = student.mobileNumber;
+                        cell.dataset.year = currentYear;
+                        cell.dataset.month = i + 1; 
+                        cell.style.cursor = 'pointer';
+                        cell.addEventListener('dblclick', handlePDetailsMarking);
+                    }
+                }
+            });
+        }
+        
+        // --- Attendance Logic ---
+        function getDaysInMonth(year, month) {
+            return new Date(year, month + 1, 0).getDate();
+        }
+
+        function calculateAttendanceCounts(mobile, year, month) {
+            const today = CURRENT_DATE; 
+            const daysInMonth = getDaysInMonth(year, month);
+            let presentCount = 0;
+            let absentCount = 0;
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                if (date > today) continue; 
+                
+                const dateString = date.toISOString().split('T')[0];
+                const attendanceRecord = attendanceRecords.find(r => r.mobile === mobile && r.date === dateString);
+                
+                if (attendanceRecord && attendanceRecord.times.length > 0) {
+                    presentCount++;
+                } else {
+                    absentCount++;
+                }
+            }
+            return { presentCount, absentCount };
+        }
+        
+        function handleAttendanceRowDoubleClick(event) {
+            const row = event.currentTarget;
+            const mobile = row.dataset.mobile;
+            const student = studentRecords.find(s => s.mobileNumber === mobile);
+            
+            if (!student) return;
+
+            const currentMonth = CURRENT_DATE.getMonth();
+            const currentYear = CURRENT_DATE.getFullYear();
+            const counts = calculateAttendanceCounts(mobile, currentYear, currentMonth);
+            
+            const wowRecord = wowSeatRecords.find(w => w.mobile === student.mobileNumber);
+            let nameDisplay = student.fullName || '--- REMOVED ---';
+            if (wowRecord && wowRecord.seatNo && wowRecord.shifts > 0) {
+                 nameDisplay += ` (Seat: <b style="color: blue;">${wowRecord.seatNo}</b> - Shift(s): <b style="color: red;">${wowRecord.shifts}</b>)`;
+            }
+
+            summaryStudentName.innerHTML = nameDisplay;
+            summaryAbsentCount.textContent = counts.absentCount;
+            summaryPresentCount.textContent = counts.presentCount;
+            
+            attendanceLogPanel.style.display = 'none';
+            detailedAttendancePanel.style.display = 'block';
+
+            renderDetailedAttendanceTable(mobile, currentYear, currentMonth);
+            
+            backToLogBtn.textContent = "< Back to Log";
+            backToLogBtn.onclick = showAttendanceView; 
+        }
+
+
+        function renderAttendanceTable() {
+            const tableBody = document.getElementById('attendanceTableBody');
+            const headerRow = document.getElementById('attendanceHeaderRow');
+            const subHeaderRow = document.getElementById('attendanceSubHeaderRow');
+            if (!tableBody || !headerRow || !subHeaderRow) return;
+
+            tableBody.innerHTML = ''; headerRow.innerHTML = ''; subHeaderRow.innerHTML = '';
+
+            const today = CURRENT_DATE; 
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const currentMonthName = monthNames[currentMonth];
+
+            const dateHeaders = [];
+            for (let i = 0; i < 6; i++) {
+                let date = new Date(today);
+                date.setDate(today.getDate() - i);
+                dateHeaders.push(date);
+            }
+
+            headerRow.innerHTML = `
+                <th colspan="2" style="width: 25%; text-align: center;">${currentMonthName} Log</th>
+                <th colspan="6" style="width: 75%; text-align: center;">Last 6 Days (Newest to Oldest)</th>
+            `;
+
+            subHeaderRow.innerHTML = `
+                <th style="width: 5%; border-color: #f44336 !important;">Absent No.</th>
+                <th style="width: 20%; border-color: var(--gradient-start) !important;">Full Name</th>
+            `;
+            dateHeaders.forEach(date => {
+                const th = document.createElement('th');
+                th.className = 'date-sub-header';
+                th.textContent = `${date.getDate()} (${date.toDateString().slice(0, 3)})`;
+                subHeaderRow.appendChild(th);
+            });
+            
+            studentRecords.forEach((student, index) => {
+                const row = document.getElementById('attendanceTableBody').insertRow();
+                row.dataset.mobile = student.mobileNumber;
+                row.addEventListener('dblclick', handleAttendanceRowDoubleClick);
+                
+                const { absentCount } = calculateAttendanceCounts(student.mobileNumber, currentYear, currentMonth);
+
+                const wowRecord = wowSeatRecords.find(w => w.mobile === student.mobileNumber);
+                let fullNameDisplay = `${index + 1}. ${student.fullName || '--- REMOVED ---'}`;
+                 if (wowRecord) {
+                    const currentWowRecord = wowSeatRecords.find(r => r.mobile === student.mobileNumber);
+                    if (wowRecord.seatNo && currentWowRecord.shifts > 0) {
+                        fullNameDisplay += `<br><span style="font-size: 0.8em; color: #555;">   Seat: <b style="color: blue;">${wowRecord.seatNo}</b> - Shift(s): <b style="color: red;">${currentWowRecord.shifts}</b></span>`;
+                    }
+                }
+
+                row.insertCell().innerHTML = `<div class="attendance-absent">${absentCount}</div>`;
+                row.insertCell().innerHTML = fullNameDisplay;
+
+                dateHeaders.forEach(date => {
+                    const dateString = date.toISOString().split('T')[0];
+                    const attendanceRecord = attendanceRecords.find(r => r.mobile === student.mobileNumber && r.date === dateString);
+
+                    const cell = row.insertCell();
+                    if (attendanceRecord && attendanceRecord.times.length > 0) {
+                        cell.className = 'attendance-present';
+                        cell.innerHTML = attendanceRecord.times.map(t => `${t.in} - ${t.out}`).join(' / ');
+                    } else {
+                        cell.className = 'attendance-absent';
+                        if (date.toDateString() === today.toDateString()) {
+                            cell.textContent = 'Pending';
+                        } else {
+                            cell.textContent = 'A';
+                        }
+                    }
+                });
+            });
+        }
+        
+        function renderDetailedAttendanceTable(mobile, year, month) {
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            
+            calendarMonthTitle.textContent = `${monthNames[month]} ${year} Attendance`;
+            
+            let dayLabels = [];
+            while (calendarGridContainer.children.length > 0) {
+                if (calendarGridContainer.children.length <= 7) {
+                    dayLabels.unshift(calendarGridContainer.lastChild); 
+                }
+                calendarGridContainer.removeChild(calendarGridContainer.lastChild);
+            }
+            dayLabels.reverse().forEach(label => calendarGridContainer.appendChild(label));
+
+            const daysInMonth = getDaysInMonth(year, month);
+            const firstDayOfMonth = new Date(year, month, 1);
+            const startDay = firstDayOfMonth.getDay(); 
+            
+            for (let i = 0; i < startDay; i++) {
+                const paddingBox = document.createElement('div');
+                paddingBox.className = 'date-box padding';
+                paddingBox.innerHTML = '<div class="date-box-header"></div>';
+                calendarGridContainer.appendChild(paddingBox);
+            }
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateString = date.toISOString().split('T')[0];
+                const attendanceRecord = attendanceRecords.find(r => r.mobile === mobile && r.date === dateString);
+                
+                const dateBox = document.createElement('div');
+                dateBox.classList.add('date-box');
+                dateBox.innerHTML = `<div class="date-box-header">${day}</div><div class="date-box-body"></div>`;
+
+                const body = dateBox.querySelector('.date-box-body');
+                
+                if (date > CURRENT_DATE) {
+                    dateBox.classList.add('future');
+                    body.textContent = '---'; 
+                    body.style.color = '#666';
+                }
+                else if (attendanceRecord && attendanceRecord.times.length > 0) {
+                    dateBox.classList.add('present');
+                    body.innerHTML = attendanceRecord.times.map(t => `${t.in} - ${t.out}`).join(' / ');
+                    body.style.color = '#155724'; 
+                } else {
+                    dateBox.classList.add('absent');
+                    body.textContent = 'ABSENT';
+                    body.style.color = '#721c24'; 
+                }
+
+                calendarGridContainer.appendChild(dateBox);
+            }
+        }
+        
+        function showPayActionPanel() {
+             showPanel(payActionPanel);
+        }
+        
+        const allContentPanels = [
+            dashboardPanel, studentViewPanel, wowViewPanel, seatGraphPanel, 
+            payDetailsPanel, attendanceViewPanel, payActionPanel, pDetailsPanel,
+            settingsPanel, studentDashboardPanel, studentPaymentPanel 
+        ];
+        
+        function switchTab(type) {
+            document.getElementById('loginType').value = type;
+            ownerTab.classList.remove('active');
+            studentTab.classList.remove('active');
+            errorMsg.style.display = 'none';
+            mobileInput.value = '';
+            passwordInput.value = '';
+            document.getElementById('loginSubmitBtn').textContent = type.toUpperCase() + ' LOGIN';
+            if (type === 'owner') ownerTab.classList.add('active');
+            else studentTab.classList.add('active');
+        }
+        
+        function showPanel(panelToShow) {
+            loginPanel.style.display = 'none';
+            mainPanel.style.display = 'block';
+            allContentPanels.forEach(p => p.style.display = 'none');
+            panelToShow.style.display = 'block';
+            
+            // --- NEW: History API Push State ---
+            // If showing dashboard, reset history or push dashboard state
+            if (panelToShow === dashboardPanel || panelToShow === studentDashboardPanel) {
+               // We don't push state here generally to avoid stack buildup unless navigating from login
+            } else {
+               // Sub-panel: Push to history
+               history.pushState({ panel: panelToShow.id }, '', '');
+            }
+            
+            // Hide all modals if any content panel is shown
+            hidePaymentModal();
+            hidePaymentOverrideModal();
+            hideStudentActionModal();
+        }
+        
+        // --- NEW: Mobile Back Button Handler (History API) ---
+        window.onpopstate = function(event) {
+            // If state exists (we pushed it previously)
+            if (event.state && event.state.panel) {
+                // In a complex app, we would load that panel. 
+                // BUT, since we want the back button to go "UP" to dashboard:
+                // We check if we are logged in.
+                if (loggedInStudentMobile) {
+                    showPanel(studentDashboardPanel);
+                } else {
+                    showPanel(dashboardPanel);
+                }
+            } else {
+                // No state means we are back at the start (Dashboard or Login)
+                if (loggedInStudentMobile) {
+                    showPanel(studentDashboardPanel);
+                } else {
+                    // Check if we are logged in as owner
+                    if (loginPanel.style.display === 'none') {
+                        showPanel(dashboardPanel);
+                    } else {
+                        // Already at login, do nothing (browser will exit)
+                    }
+                }
+            }
+        };
+
+        function showDashboard() { 
+            showPanel(dashboardPanel); 
+            // Clear future history stack if possible, or just push dashboard state
+            history.replaceState({ panel: 'dashboard' }, '', '');
+        }
+
+        function showLogin() {
+            mainPanel.style.display = 'none';
+            loginPanel.style.display = 'block';
+            loggedInStudentMobile = null; 
+            switchTab('owner'); 
+            history.replaceState({ panel: 'login' }, '', '');
+        }
+
+        function showStudentView() {
+            showPanel(studentViewPanel);
+            renderStudentTable(); 
+        }
+ 
+        function showSeatGraphView() { 
+            showPanel(seatGraphPanel);
+            generateTable();
+            updateTableStatus(); 
+            if(adminControls) adminControls.classList.remove('show');
+            if(adminControls) adminControls.style.display = 'none';
+        }
+        
+        function showWowView() {
+            showPanel(wowViewPanel);
+            renderWowTable();
+        }
+        
+        function showPayDetailsView() {
+            showPanel(payDetailsPanel); 
+            renderPayDetailsTable(); 
+        }
+        
+        function showAttendanceView() {
+            showPanel(attendanceViewPanel);
+            attendanceLogPanel.style.display = 'block';
+            detailedAttendancePanel.style.display = 'none'; 
+            renderAttendanceTable();
+        }
+        
+        function showSettingsPanel() {
+            showPanel(settingsPanel);
+        }
+
+        const allPanels = [
+            loginPanel, dashboardPanel, studentViewPanel, seatGraphPanel, 
+            wowViewPanel, payDetailsPanel, attendanceViewPanel, payActionPanel, 
+            mainPanel, pDetailsPanel, settingsPanel, studentDashboardPanel, studentPaymentPanel
+        ];
+        let originalDisplays = {};
+
+        function printPanel(panelId) {
+            allPanels.forEach(p => { originalDisplays[p.id] = p.style.display; });
+            
+            const attendanceLogOriginalDisplay = attendanceLogPanel.style.display;
+            const detailedAttendanceOriginalDisplay = detailedAttendancePanel.style.display;
+
+            allPanels.forEach(p => p.style.display = 'none');
+            mainPanel.style.display = 'block';
+            
+            const panelToPrint = document.getElementById(panelId);
+            if (panelToPrint) {
+                if (panelId === 'attendanceViewPanel') {
+                    attendanceLogPanel.style.setProperty('display', 'block', 'important');
+                    detailedAttendancePanel.style.setProperty('display', 'block', 'important');
+                } else {
+                    panelToPrint.style.setProperty('display', 'block', 'important');
+                }
+            }
+
+            window.print();
+            
+            setTimeout(() => {
+                allPanels.forEach(p => {
+                    p.style.removeProperty('display');
+                    p.style.display = originalDisplays[p.id];
+                });
+                attendanceLogPanel.style.display = attendanceLogOriginalDisplay;
+                detailedAttendancePanel.style.display = detailedAttendanceOriginalDisplay;
+            }, 500);
+        }
+
+        function toggleForm() {
+            if (studentForm.style.display === 'grid') {
+                studentForm.style.display = 'none';
+                toggleFormBtn.innerHTML = '<i class="fas fa-plus"></i> Add New';
+                studentForm.reset();
+            } else {
+                studentForm.style.display = 'grid';
+                toggleFormBtn.innerHTML = '<i class="fas fa-minus"></i> Hide';
+            }
+        }
+        
+        function generatePassword(fullName, mobile) {
+            const namePart = fullName.trim().toUpperCase().replace(/[^A-Z\s]/g, '').slice(0, 4);
+            const mobilePart = mobile.slice(-4);
+            return namePart.replace(/\s/g, '') + mobilePart;
+        }
+        
+        function generateRandomStudents(count) {
+            const firstNames = ["Rahul", "Priya", "Amit", "Sneha", "Vikas", "Anjali", "Suresh", "Kirti", "Raj", "Neha"];
+            const lastNames = ["Kumar", "Singh", "Sharma", "Verma", "Yadav", "Gupta", "Jha", "Mehta", "Rai", "Mishra"];
+            const cities = ["Patna", "Delhi", "Mumbai", "Kolkata", "Bengaluru", "Pune", "Lucknow"];
+            const newRecords = [];
+            for (let i = 0; i < count; i++) {
+                const fullName = firstNames[Math.floor(Math.random() * firstNames.length)] + " " + lastNames[Math.floor(Math.random() * lastNames.length)];
+                const fatherName = firstNames[Math.floor(Math.random() * lastNames.length)] + " " + lastNames[Math.floor(Math.random() * lastNames.length)];
+                const mobileNumber = '9' + Math.random().toString().slice(2, 11);
+                const address = cities[Math.floor(Math.random() * cities.length)];
+                const date = new Date(Date.now() - Math.random() * 1.577e+10);
+                const admissionDate = date.toISOString().split('T')[0];
+                const password = generatePassword(fullName, mobileNumber);
+                newRecords.push({ fullName, fatherName, address, mobileNumber, admissionDate, userName: mobileNumber, password });
+            }
+            return newRecords;
+        }
+
+        function renderStudentTable() {
+            studentTableBody.innerHTML = ''; 
+            studentRecords.forEach((record, index) => {
+                const row = studentTableBody.insertRow();
+                row.dataset.mobile = record.mobileNumber;
+                row.addEventListener('dblclick', () => handleStudentRowDoubleClick(record.mobileNumber, index));
+                
+                row.insertCell().textContent = index + 1; 
+                row.insertCell().textContent = record.fullName || '--- REMOVED ---';
+                row.insertCell().textContent = record.fatherName || '--- REMOVED ---'; 
+                row.insertCell().textContent = record.address || '--- REMOVED ---';
+                row.insertCell().textContent = record.mobileNumber || '---';
+                row.insertCell().textContent = record.admissionDate || '---';
+                row.insertCell().textContent = record.userName || '---';
+                row.insertCell().textContent = record.password || '---'; 
+            });
+        }
+        
+        function handleStudentRowDoubleClick(mobile, index) {
+            const student = studentRecords[index];
+            const isRemoved = !student.fullName;
+            
+            replaceMobileTarget.value = mobile;
+            replaceOriginalIndex.value = index;
+            studentActionName.textContent = student.fullName || `Index ${index + 1} (REMOVED)`;
+            studentActionHeader.textContent = isRemoved ? 'Re-Add Student' : 'Student Actions';
+
+            // Show options or form based on status
+            actionOptions.innerHTML = '';
+            replaceStudentForm.style.display = 'none';
+
+            if (isRemoved) {
+                 // Pre-fill mobile and admission date for reference, but allow changing
+                 replaceMobileNumberInput.value = student.mobileNumber || '';
+                 replaceAdmissionDateInput.value = student.admissionDate || '';
+                 replaceFullNameInput.value = '';
+                 replaceFatherNameInput.value = '';
+                 replaceAddressInput.value = '';
+                 replaceMobileNumberInput.readOnly = false; // Allow changing mobile/admission for new entry
+                 
+                 // Show the form directly for re-adding
+                 replaceStudentForm.style.display = 'block';
+            } else {
+                // Show action buttons for existing student
+                actionOptions.innerHTML = `
+                     <button class="dashboard-btn" id="removeStudentBtn" style="background: linear-gradient(135deg, #dc3545, #f44336); margin-bottom: 20px;">
+                        <i class="fas fa-trash"></i> Student Name Remove (Keep Index)
+                     </button>
+                     <button class="dashboard-btn" id="replaceNameBtn" style="background: linear-gradient(135deg, #28a745, #4caf50);">
+                        <i class="fas fa-edit"></i> Replace / Edit Name
+                     </button>
+                `;
+                
+                document.getElementById('removeStudentBtn').addEventListener('click', () => handleRemoveStudent(mobile, index));
+                document.getElementById('replaceNameBtn').addEventListener('click', () => handleReplaceStart(student));
+            }
+
+            studentActionModal.style.display = 'flex';
+        }
+
+        function handleRemoveStudent(mobile, index) {
+            const password = prompt(`'${studentRecords[index].fullName}' को हटाने के लिए Admin Password दर्ज करें:`);
+            if (password !== OWNER_PASSWORD) {
+                alert("Incorrect Admin Password! Removal cancelled.");
+                return;
+            }
+
+            // **MODIFIED LOGIC: Clear all fields except the reserved slot.**
+            // We keep the old mobile/admission date in the JS object 
+            // but wipe the display fields to make the slot ready for replacement.
+            
+            studentRecords[index].fullName = null;
+            studentRecords[index].fatherName = null;
+            studentRecords[index].address = null;
+            // Keep mobile, admissionDate, userName, password in the record, but clear visible parts:
+            studentRecords[index].userName = null;
+            studentRecords[index].password = null;
+            
+            // Clear seat bookings for the removed student
+            bookings = bookings.filter(b => b.mobile !== mobile);
+            const wowIndex = wowSeatRecords.findIndex(w => w.mobile === mobile);
+            if (wowIndex > -1) {
+                // Clear WOW specific data as well
+                wowSeatRecords[wowIndex] = { mobile: mobile, seatNo: '', batchString: 'N/A', shifts: 0, payment: 0, customRate: 0, fixedTotalPayment: 0 };
+            }
+
+            alert(`Student ${mobile} removed (Index kept).`);
+            hideStudentActionModal();
+            renderStudentTable();
+            renderWowTable(); 
+        }
+
+        function handleReplaceStart(student) {
+            // Fill form with current data for editing
+            replaceMobileTarget.value = student.mobileNumber;
+            replaceFullNameInput.value = student.fullName;
+            replaceFatherNameInput.value = student.fatherName;
+            replaceAddressInput.value = student.address;
+            replaceMobileNumberInput.value = student.mobileNumber;
+            replaceAdmissionDateInput.value = student.admissionDate;
+            replaceMobileNumberInput.readOnly = false;
+            
+            // Hide action buttons, show the form
+            actionOptions.style.display = 'none';
+            replaceStudentForm.style.display = 'block';
+        }
+        
+        replaceStudentForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const originalMobile = replaceMobileTarget.value;
+            const index = parseInt(replaceOriginalIndex.value);
+            const newFullName = replaceFullNameInput.value.trim();
+            const newFatherName = replaceFatherNameInput.value.trim();
+            const newAddress = replaceAddressInput.value.trim();
+            const newMobile = replaceMobileNumberInput.value.trim();
+            const newAdmissionDate = replaceAdmissionDateInput.value;
+            const password = replaceAdminPasswordInput.value;
+            
+            if (password !== OWNER_PASSWORD) {
+                alert("Incorrect Admin Password! Update cancelled.");
+                replaceAdminPasswordInput.value = '';
+                return;
+            }
+            
+            if (newMobile.length !== 10 || isNaN(newMobile)) {
+                 alert("Please enter a valid 10-digit mobile number."); return;
+            }
+            
+            // Check for mobile conflict if mobile number changes
+            if (originalMobile !== newMobile && studentRecords.some(r => r.mobileNumber === newMobile && r.mobileNumber !== originalMobile)) {
+                alert("Error: New mobile number already registered!");
+                return;
+            }
+            
+            const isReAdding = !studentRecords[index].fullName;
+            const newPassword = generatePassword(newFullName, newMobile); // Always generate new password on replace/re-add
+
+            // Update student record
+            studentRecords[index] = { 
+                fullName: newFullName, 
+                fatherName: newFatherName, 
+                address: newAddress, 
+                mobileNumber: newMobile, 
+                admissionDate: newAdmissionDate, 
+                userName: newMobile, 
+                password: newPassword 
+            };
+            
+            // If mobile changed, update all related records
+            if (originalMobile !== newMobile) {
+                // 1. Update WOW record mobile key
+                const wowIndex = wowSeatRecords.findIndex(w => w.mobile === originalMobile);
+                if (wowIndex > -1) wowSeatRecords[wowIndex].mobile = newMobile;
+                
+                // 2. Update Bookings mobile key
+                bookings.filter(b => b.mobile === originalMobile).forEach(b => b.mobile = newMobile);
+                
+                // 3. Update Payment records mobile key
+                paymentRecords.filter(p => p.mobile === originalMobile).forEach(p => p.mobile = newMobile);
+                
+                // 4. Update Attendance records mobile key
+                attendanceRecords.filter(a => a.mobile === originalMobile).forEach(a => a.mobile = newMobile);
+                
+                // Recalculate WOW data as shifts might have changed due to booking updates
+                updateWowDataFromGraphByMobile(newMobile, false);
+            }
+            
+            alert(`${isReAdding ? 'Student Re-Added' : 'Student Data Updated'}! ${originalMobile !== newMobile ? `(Mobile changed to ${newMobile})` : ''} Password: ${newPassword}`);
+            
+            hideStudentActionModal();
+            renderStudentTable();
+            renderWowTable(); 
+        });
+
+        closeStudentActionModal.addEventListener('click', hideStudentActionModal);
+        function hideStudentActionModal() {
+             studentActionModal.style.display = 'none';
+             replaceStudentForm.reset();
+             replaceMobileNumberInput.readOnly = false;
+             replaceAdminPasswordInput.value = '';
+             actionOptions.style.display = 'flex';
+        }
+
+
+        function showStudentDashboard() {
+            if (!loggedInStudentMobile) {
+                showLogin();
+                return;
+            }
+            const student = studentRecords.find(s => s.mobileNumber === loggedInStudentMobile);
+            const wow = wowSeatRecords.find(w => w.mobile === loggedInStudentMobile);
+            
+            // --- UPDATED: Render the New Welcome Card ---
+            studentWelcomeName.textContent = student.fullName || '--- REMOVED ---';
+            
+            let seatText = "Seat: Not Allotted | Shift: N/A";
+            if (wow && wow.seatNo && wow.shifts > 0) {
+                seatText = `Seat No: ${wow.seatNo} | Shift: ${wow.batchString}`;
+            }
+            studentSeatInfo.textContent = seatText;
+            
+            showPanel(studentDashboardPanel);
+            history.replaceState({ panel: 'studentDashboard' }, '', '');
+        }
+        
+        
+        function haversineDistance(lat1, lon1, lat2, lon2) {
+            function toRad(x) { return x * Math.PI / 180; }
+            const R = 6371000; 
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            lat1 = toRad(lat1);
+            lat2 = toRad(lat2);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c; 
+        }
+
+        function startStudentAttendance() {
+            alert("ATTENDANCE PROCESS:\n1. Location check starts (20m limit).\n2. QR scan requested.");
+            
+            const coordsStr = prompt("SIMULATION: Enter your current GPS coordinates (lat,lng, e.g., 25.6127, 85.1589):", "25.6127, 85.1589");
+            if (!coordsStr) {
+                 alert("Attendance cancelled.");
+                 return;
+            }
+            
+            const coords = coordsStr.split(',').map(c => parseFloat(c.trim()));
+            const userLat = coords[0];
+            const userLng = coords[1];
+
+            if (isNaN(userLat) || isNaN(userLng)) {
+                alert("Error: Invalid coordinates format.");
+                return;
+            }
+
+            if (!libraryLocation.set) {
+                alert("Owner has not set the library location yet. Attendance failed.");
+                return;
+            }
+
+            const distance = haversineDistance(libraryLocation.lat, libraryLocation.lng, userLat, userLng);
+            
+            if (distance > libraryLocation.range) {
+                alert(`Error: You are ${distance.toFixed(2)}m away. You must be within ${libraryLocation.range}m of the library to mark attendance.`);
+                return;
+            }
+            
+            const scannedQR = prompt(`GPS OK! (${distance.toFixed(2)}m away). Now scan the QR code (Type the code: ${LIBRARY_QR_CODE}):`);
+            
+            if (scannedQR === null) {
+                alert("Attendance cancelled.");
+                return;
+            }
+            
+            if (scannedQR === LIBRARY_QR_CODE) {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                
+                alert(`ATTENDANCE SUCCESSFUL!\nStudent: ${loggedInStudentMobile}\nTime: ${timeString}\nLocation verified.`);
+                
+            } else {
+                alert("Error: Invalid QR Code. Attendance failed.");
+            }
+        }
+
+        function showStudentPaymentView() {
+            showPanel(studentPaymentPanel);
+            dueMonthsContainer.innerHTML = 'Loading due months...';
+            
+            const student = studentRecords.find(s => s.mobileNumber === loggedInStudentMobile);
+            const admissionDate = new Date(student.admissionDate);
+            const today = CURRENT_DATE;
+            let totalDue = 0;
+            
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            let tempDate = new Date(admissionDate);
+            let dueMonthsHTML = '';
+
+            while (tempDate.getFullYear() < today.getFullYear() || (tempDate.getFullYear() === today.getFullYear() && tempDate.getMonth() <= today.getMonth())) {
+                const year = tempDate.getFullYear();
+                const month = tempDate.getMonth() + 1; 
+                const monthName = monthNames[tempDate.getMonth()];
+                
+                const isPaid = paymentRecords.some(p => p.mobile === loggedInStudentMobile && p.year === year && p.month === month);
+                
+                if (!isPaid) {
+                    const amount = getRequiredAmount(loggedInStudentMobile); 
+                    dueMonthsHTML += `
+                        <div style="margin-bottom: 10px;">
+                            <input type="checkbox" id="month-${year}-${month}" data-amount="${amount}" class="due-month-box">
+                            <label for="month-${year}-${month}">${monthName} ${year} - ₹${amount}</label>
+                        </div>
+                    `;
+                }
+                
+                tempDate.setMonth(tempDate.getMonth() + 1); 
+            }
+            
+            if (dueMonthsHTML === '') {
+                dueMonthsHTML = '<p>You have no due payments. Good job!</p>';
+                proceedToPayBtn.style.display = 'none';
+            } else {
+                 proceedToPayBtn.style.display = 'block';
+                 proceedToPayBtn.textContent = 'Proceed to Pay (Total: ₹0)';
+            }
+            
+            dueMonthsContainer.innerHTML = dueMonthsHTML;
+            
+            document.querySelectorAll('.due-month-box').forEach(box => {
+                box.addEventListener('change', () => {
+                    let currentTotal = 0;
+                    document.querySelectorAll('.due-month-box:checked').forEach(checkedBox => {
+                        currentTotal += parseInt(checkedBox.dataset.amount);
+                    });
+                    proceedToPayBtn.textContent = `Proceed to Pay (Total: ₹${currentTotal})`;
+                });
+            });
+        }
+
+        function showStudentHistoryView() {
+            if (!loggedInStudentMobile) {
+                showLogin();
+                return;
+            }
+
+            // 1. Show the PARENT panel first (FIX)
+            showPanel(attendanceViewPanel);
+            
+            // 2. Hide the Owner's Log View (Sibling)
+            attendanceLogPanel.style.display = 'none';
+            
+            // 3. Show the Student's Calendar View (Target)
+            detailedAttendancePanel.style.display = 'block';
+            
+            // 4. Render Data
+            const currentMonth = CURRENT_DATE.getMonth();
+            const currentYear = CURRENT_DATE.getFullYear();
+            renderDetailedAttendanceTable(loggedInStudentMobile, currentYear, currentMonth);
+            
+            // 5. Update Summary Text
+            const student = studentRecords.find(s => s.mobileNumber === loggedInStudentMobile);
+            const counts = calculateAttendanceCounts(loggedInStudentMobile, currentYear, currentMonth);
+            
+            const wowRecord = wowSeatRecords.find(w => w.mobile === student.mobileNumber);
+            let nameDisplay = student.fullName || '--- REMOVED ---';
+            if (wowRecord && wowRecord.seatNo && wowRecord.shifts > 0) {
+                 nameDisplay += ` (Seat: <b style="color: blue;">${wowRecord.seatNo}</b> - Shift(s): <b style="color: red;">${wowRecord.shifts}</b>)`;
+            }
+            
+            summaryStudentName.innerHTML = nameDisplay;
+            summaryAbsentCount.textContent = counts.absentCount;
+            summaryPresentCount.textContent = counts.presentCount;
+            
+            // 6. Fix Back Button
+            backToLogBtn.textContent = "< Back to My Dashboard";
+            backToLogBtn.onclick = showStudentDashboard; 
+        }
+
+        ownerTab.addEventListener('click', () => switchTab('owner'));
+        studentTab.addEventListener('click', () => switchTab('student'));
+
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const mobile = mobileInput.value.trim(), password = passwordInput.value.trim(), type = loginType.value;
+            
+            let isSuccess = (type === 'owner' && mobile === OWNER_MOBILE && password === OWNER_PASSWORD) ||
+                            (type === 'student' && studentRecords.some(r => r.userName === mobile && r.password === password && r.fullName)); // Check for fullName to prevent login to removed entry
+            
+            errorMsg.style.display = isSuccess ? 'none' : 'block';
+            
+            if (isSuccess) {
+                if (type === 'owner') {
+                    loggedInStudentMobile = null; 
+                    showDashboard(); 
+                    return; 
+                } else {
+                    loggedInStudentMobile = mobile; 
+                    showStudentDashboard(); 
+                    return; 
+                }
+            } else {
+                errorMsg.textContent = 'LOGIN FAILED! Invalid credentials for ' + type.toUpperCase() + '.';
+            }
+        });
+
+        logoutBtn.addEventListener('click', showLogin);
+        studentsDataBtn.addEventListener('click', showStudentView);
+        wowBtn.addEventListener('click', showWowView);
+        seatGraphBtn.addEventListener('click', showSeatGraphView);
+        payDetailsBtn.addEventListener('click', showPayDetailsView);
+        
+        qrLocationBtn.addEventListener('click', showSettingsPanel); 
+
+        makePaymentBtn.addEventListener('click', showPayActionPanel);
+        backFromPayActionBtn.addEventListener('click', showDashboard);
+        pDetailsBtn.addEventListener('click', () => {
+            showPanel(pDetailsPanel);
+            renderPDetailsFullYearView();
+        });
+        pPrintBtn.addEventListener('click', () => { alert("P Print functionality selected."); });
+        
+        backFromPDetailsBtn.addEventListener('click', () => showPanel(payActionPanel));
+        
+        backFromPayDetailsBtn.addEventListener('click', showDashboard);
+
+        backToDashboardBtn.addEventListener('click', showDashboard);
+        toggleFormBtn.addEventListener('click', toggleForm); 
+        if (backFromSeatsBtn) backFromSeatsBtn.addEventListener('click', showDashboard);
+        if (backFromWowBtn) backFromWowBtn.addEventListener('click', showDashboard);
+        if (setSeatsButton) setSeatsButton.addEventListener('click', updateSeatCount);
+
+        attendanceBtn.addEventListener('click', showAttendanceView);
+        
+        backFromAttendanceLogBtn.addEventListener('click', showDashboard); 
+        
+        backToLogBtn.addEventListener('click', showAttendanceView); 
+
+        studentForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const fullName = document.getElementById('fullName').value.trim();
+            const fatherName = document.getElementById('fatherName').value.trim();
+            const address = document.getElementById('address').value.trim();
+            const mobileNumber = document.getElementById('mobileNumber').value.trim();
+            const admissionDate = document.getElementById('admissionDate').value;
+            if (mobileNumber.length !== 10 || isNaN(mobileNumber)) {
+                alert("Please enter a valid 10-digit mobile number."); return;
+            }
+            if (studentRecords.some(r => r.mobileNumber === mobileNumber)) {
+                alert("Error: Mobile number already registered!"); return;
+            }
+            const password = generatePassword(fullName, mobileNumber);
+            studentRecords.push({ fullName, fatherName, address, mobileNumber, admissionDate, userName: mobileNumber, password });
+            
+            // UPDATED: Initialize new WOW record with custom fields
+            wowSeatRecords.push({ mobile: mobileNumber, seatNo: '', batchString: 'N/A', shifts: 0, payment: 0, customRate: 0, fixedTotalPayment: 0 });
+            
+            renderStudentTable(); 
+            studentForm.reset(); 
+            alert(`Student added! Password: ${password}`);
+            toggleForm();
+        });
+        
+        generateQRBtn.addEventListener('click', () => {
+            alert(`QR Code Content: ${LIBRARY_QR_CODE}\n(This would normally show a printable QR code image for the library wall)`);
+        });
+        
+        setLocationBtn.addEventListener('click', () => {
+            const link = prompt("Enter Google Maps coordinates (lat,lng, e.g., 25.6127, 85.1589):", "25.6127, 85.1589"); 
+            if (link) {
+                const match = link.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
+                if (match && match[1] && match[2]) {
+                    libraryLocation.lat = parseFloat(match[1]);
+                    libraryLocation.lng = parseFloat(match[2]);
+                    libraryLocation.set = true;
+                    alert(`Location Set Successfully!\nLat: ${libraryLocation.lat}\nLng: ${libraryLocation.lng}\nAttendance Check Range: ${libraryLocation.range}m`);
+                } else {
+                    alert("Could not parse coordinates. Please enter them as 'latitude, longitude' (e.g., 25.1234, 85.5678). Location not set.");
+                }
+            }
+        });
+        
+        backFromSetupBtn.addEventListener('click', showDashboard);
+
+        studentLogoutBtn.addEventListener('click', showLogin);
+        studentAttendanceBtn.addEventListener('click', startStudentAttendance);
+        studentPaymentBtn.addEventListener('click', showStudentPaymentView);
+        studentHistoryBtn.addEventListener('click', showStudentHistoryView);
+        
+        backFromStudentPaymentBtn.addEventListener('click', showStudentDashboard);
+        proceedToPayBtn.addEventListener('click', () => {
+            alert("Payment API integration is pending. This would lead to PhonePe/UPI.");
+        });
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+             const today = CURRENT_DATE; 
+             const day = today.getDate();
+             const month = today.getMonth(); 
+             const year = today.getFullYear();
+             
+             const pastDate = new Date(year - 1, 7, day).toISOString().split('T')[0]; 
+
+             const dueTodayDate = new Date(year, month - 1, day).toISOString().split('T')[0]; 
+             const lateDate = new Date(year, month - 2, day - 1).toISOString().split('T')[0]; 
+             const futureDate = new Date(year, month, day + 3).toISOString().split('T')[0]; 
+             const veryFutureDate = new Date(year, month, day + 8).toISOString().split('T')[0]; 
+             
+             studentRecords.push(...generateRandomStudents(28));
+             
+             studentRecords.push({fullName: "Avinash Kumar", fatherName: "Shankar Kumar", address: "Patna", mobileNumber: "6201530654", admissionDate: futureDate, userName: "6201530654", password: "AVIN0654"});
+             studentRecords.push({fullName: "Pooja Devi", fatherName: "Rajesh Sharma", address: "Delhi", mobileNumber: "9876543210", admissionDate: veryFutureDate, userName: "9876543210", password: "POOJ3210"});
+             studentRecords.push({fullName: "Ravi Sharma", fatherName: "Mohan Sharma", address: "Mumbai", mobileNumber: "9988776655", admissionDate: dueTodayDate, userName: "9988776655", password: "RAVI6655"});
+             studentRecords.push({fullName: "Sunita Verma", fatherName: "Anil Verma", address: "Pune", mobileNumber: "9988776644", admissionDate: pastDate, userName: "9988776644", password: "SUNI6644"});
+
+             studentRecords.forEach(s => {
+                if (!wowSeatRecords.some(r => r.mobile === s.mobileNumber)) {
+                    // UPDATED: Initialize new WOW record with custom fields
+                    wowSeatRecords.push({ mobile: s.mobileNumber, seatNo: '', batchString: 'N/A', shifts: 0, payment: 0, customRate: 0, fixedTotalPayment: 0 });
+                }
+             });
+             
+             bookings.push({ seat: 1, shift: 3, name: 'Avinash Kumar', mobile: '6201530654'});
+             bookings.push({ seat: 2, shift: 1, name: 'Pooja Devi', mobile: '9876543210'});
+             bookings.push({ seat: 5, shift: 4, name: 'Ravi Sharma', mobile: '9988776655'});
+             
+             // Manually set an override for testing
+             const avinashWow = wowSeatRecords.find(w => w.mobile === '6201530654');
+             if (avinashWow) {
+                 avinashWow.customRate = 250; // Avinash now pays 250/shift
+             }
+             const poojaWow = wowSeatRecords.find(w => w.mobile === '9876543210');
+             if (poojaWow) {
+                 poojaWow.fixedTotalPayment = 200; // Pooja pays a fixed 200 total (even for 1 shift)
+             }
+             
+             updateWowDataFromGraphByMobile('6201530654', false);
+             updateWowDataFromGraphByMobile('9876543210', false);
+             updateWowDataFromGraphByMobile('9988776655', false);
+
+
+             showLogin();
+             renderStudentTable();
+        });
+    </script>
+</body>
+</html>

@@ -1,12 +1,17 @@
 import { Hono } from 'hono'
-import { renderer } from './renderer'
+import { serveStatic } from 'hono/cloudflare-workers'
 
 const app = new Hono()
 
-app.use(renderer)
+// Serve static files from public directory
+app.use('/static/*', serveStatic({ root: './public' }))
 
-app.get('/', (c) => {
-  return c.render(<h1>Hello!</h1>)
+// Main route - serve the index.html
+app.get('/', serveStatic({ path: './public/static/index.html' }))
+
+// Health check
+app.get('/health', (c) => {
+  return c.json({ status: 'healthy', timestamp: new Date().toISOString() })
 })
 
 export default app
